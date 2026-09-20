@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>历史 | Crypto Journal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="nav">
+    <div class="nav__inner">
+      <a class="brand" href="index.html">
+        <div class="brand__mark"><img src="favicon.svg" alt=""></div>
+        <span>DADA TRADING</span>
+      </a>
+      <nav class="nav__links">
+        <a href="index.html">记录</a>
+        <a href="history.html" class="active">历史</a>
+        <a href="stats.html">统计</a>
+      </nav>
+      <div class="nav__actions">
+        <a class="btn btn--ghost" href="#export">导出数据</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="pagehead section--dark">
+      <div class="wrap wrap--narrow">
+        <p class="eyebrow">Trade History</p>
+        <h1 class="display">历史</h1>
+        <p class="lede">回顾每一笔交易，找到哪些决策在做对的事，哪些在亏钱</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+
+        <!-- Summary -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">符合筛选的交易</div>
+            <div class="stat-value" id="sumTotal">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">已平仓</div>
+            <div class="stat-value" id="sumClosed">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">胜率</div>
+            <div class="stat-value" id="sumWinrate">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">累计盈亏</div>
+            <div class="stat-value" id="sumPnl">—</div>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="grow" style="max-width:300px">
+            <input type="search" id="fQ" placeholder="搜索交易对 / 理由 / 笔记…">
+          </div>
+          <select id="fMarketType">
+            <option value="">全部市场</option>
+            <option value="spot">现货</option>
+            <option value="futures">合约</option>
+          </select>
+          <select id="fDirection">
+            <option value="">全部方向</option>
+            <option value="long">做多</option>
+            <option value="short">做空</option>
+          </select>
+          <select id="fResult">
+            <option value="">全部结果</option>
+            <option value="win">盈利</option>
+            <option value="loss">亏损</option>
+            <option value="breakeven">持平</option>
+            <option value="open">持仓中</option>
+          </select>
+          <select id="fMonth">
+            <option value="">全部月份</option>
+          </select>
+          <button class="btn btn--ghost" id="btnReset">重置</button>
+        </div>
+
+        <div class="list-meta">
+          <span id="resultCount"></span>
+          <div id="pager" style="display:flex;gap:6px"></div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="table-wrap">
+            <table class="table" id="tradeTable">
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>交易对</th>
+                  <th>方向</th>
+                  <th>市场</th>
+                  <th>进场 → 出场</th>
+                  <th>收益率</th>
+                  <th>盈亏</th>
+                  <th>结果</th>
+                  <th>理由</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="empty" id="histEmpty" style="display:none">
+            <div class="empty-icon">🗒</div>
+            <h3>还没有交易记录</h3>
+            <p>去记录第一笔交易，或者调整筛选条件再看看。</p>
+            <a class="btn btn--primary btn--row" href="#" onclick="switchView('record'); return false;">去记录</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Export / backup -->
+    <section id="export" class="section">
+      <div class="wrap">
+        <div class="card">
+          <div class="card__head">
+            <div>
+              <h3 class="card__title">数据导出与备份</h3>
+              <p class="card__sub">CSV 可用 Excel / Numbers 打开；JSON 备份包含截图，可完整恢复。</p>
+            </div>
+          </div>
+          <div class="toolbar" style="justify-content:flex-start;background:none;border:1px solid var(--line);padding:16px">
+            <button class="btn btn--sm btn--row" id="btnCsv">导出 CSV（当前筛选）</button>
+            <button class="btn btn--ghost btn--row" id="btnBackup">备份全部数据 (JSON)</button>
+            <button class="btn btn--ghost btn--row" id="btnRestore">从备份恢复</button>
+            <input type="file" id="fileRestore" accept=".json,application/json" style="display:none">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="card">
+          <div class="card__head">
+            <div>
+              <h3 class="card__title">数据同步（多设备）</h3>
+              <p class="card__sub">手机与 Mac 使用同一份数据。配置一次后无需手动备份导入。</p>
+            </div>
+          </div>
+          <div id="syncStatus" class="sync-status"></div>
+          <div class="toolbar" style="justify-content:flex-start;background:none;border:1px solid var(--line);padding:16px;flex-wrap:wrap">
+            <input id="syncUrl" type="text" placeholder="服务器地址，如 http://192.168.1.10:8737" style="flex:1;min-width:240px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px">
+            <button class="btn btn--sm btn--row" id="btnSyncConnect">连接并同步</button>
+            <button class="btn btn--ghost btn--row" id="btnSyncUpload">把本机数据上传到服务器</button>
+            <button class="btn btn--ghost btn--row" id="btnSyncDisconnect">断开同步（用本地数据）</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note" style="padding-bottom:40px">数据保存在本地或你自己机器的服务器上，不会上传到第三方。手机连接同一网络后用浏览器打开服务器地址即可同步使用。</p>
+  </main>
+
+  <!-- Detail modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal__head">
+        <h2 class="modal__title" id="modalTitle"></h2>
+        <button class="modal__close" id="modalClose" aria-label="关闭">✕</button>
+      </div>
+      <div id="modalBody"></div>
+      <div class="modal__actions">
+        <button class="btn btn--danger-ghost" id="modalDelete">删除这笔交易</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>
