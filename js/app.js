@@ -442,11 +442,6 @@
 
    // ---------- Init (pages call this first) ----------
    async function init() {
-     // Check for GitHub token, prompt if missing
-     if (!getGhToken()) {
-       const tok = prompt('粘贴 GitHub Token（Settings > Developer > Personal tokens）:', '');
-       if (tok) localStorage.setItem('gh_token', tok);
-     }
      await openDB();
      await migrateLegacy();
      // Try to fetch from GitHub
