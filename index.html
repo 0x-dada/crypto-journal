@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>DADA TRADING | Crypto Journal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&family=Oswald:ital,wght@0,300;0,400;0,700;1,700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/style.css?v=5925">
+</head>
+<body>
+
+  <header class="nav">
+    <div class="nav__inner">
+      <a class="brand" href="#" onclick="switchView('record'); return false;">
+        <div class="brand__mark"><img src="favicon.svg" alt=""></div>
+        <span>DADA TRADING</span>
+      </a>
+      <nav class="nav__links">
+        <a href="#" data-view="record" class="active" onclick="switchView('record'); return false;">记录</a>
+        <a href="#" data-view="history" onclick="switchView('history'); return false;">历史</a>
+        <a href="#" data-view="stats" onclick="switchView('stats'); return false;">统计</a>
+        <a href="#" data-view="review" onclick="switchView('review'); return false;">复盘</a>
+        <a href="#" data-view="club" onclick="switchView('club'); return false;">交易俱乐部<span class="club-dot"></span></a>
+      </nav>
+      <div class="nav__actions">
+        <a class="btn btn--ghost" id="navExport" href="#" onclick="switchView('history'); setTimeout(()=>document.getElementById('export').scrollIntoView({behavior:'smooth'}),50); return false;">导出数据</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======== VIEW RECORD ======== -->
+    <section class="view" id="view-record">
+      <section class="pagehead section--dark hero">
+        <div class="wrap wrap--narrow">
+          <p class="eyebrow">Trading Journal</p>
+          <h1 class="display">请认真记录每一笔交易</h1>
+          <p class="lede">保持纪律，每一次进场都写清楚，复盘才有价值</p>
+        </div>
+        <button class="player-btn" id="audioToggle" type="button" aria-label="播放暂停冥想音乐" aria-pressed="false">
+          <svg class="ic-play" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="ic-pause" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        </button>
+      </section>
+      <section class="section">
+        <div class="wrap wrap--narrow">
+          <div class="success" id="successState">
+            <div class="success-icon">✓</div>
+            <h2>已记录</h2>
+            <p>这笔交易已保存到你的日记。继续保持纪律。</p>
+            <br>
+            <button class="btn btn--primary" style="max-width:220px;margin:0 auto" onclick="location.reload()">再记一笔</button>
+            <br>
+            <a class="btn btn--ghost hide-mobile" style="width:auto" href="#" onclick="switchView('history'); return false;">查看历史记录</a>
+          </div>
+
+          <form class="form" id="tradeForm" onsubmit="handleSubmit(event)">
+            <!-- 1. 选择交易品种 -->
+            <div class="form__step">
+              <h2 class="form__label"><span>1</span> 选择交易品种</h2>
+              <p class="form__hint">输入你的交易对</p>
+              <input type="text" id="pair" placeholder="如 BTC/USDT" required>
+            </div>
+
+            <!-- 2. 现货还是合约 -->
+            <div class="form__step">
+              <h2 class="form__label"><span>2</span> 现货还是合约</h2>
+              <p class="form__hint">现货无杠杆，合约需关注保证金与强平。</p>
+              <div class="choices">
+                <label class="choice"><input type="radio" name="marketType" value="spot" checked><div><strong>现货 Spot</strong><em>无杠杆，持有现货</em></div></label>
+                <label class="choice"><input type="radio" name="marketType" value="futures"><div><strong>合约 Futures</strong><em>杠杆交易，需注意保证金与强平</em></div></label>
+              </div>
+            </div>
+
+            <!-- 3. 交易周期与方向 -->
+            <div class="form__step">
+              <h2 class="form__label"><span>3</span> 交易周期与方向</h2>
+              <p class="form__hint">选择时间框架，以及这笔交易的方向。</p>
+              <div>
+                <div class="field-label">时间框架</div>
+                <select id="timeframe" required>
+                  <option value="">选择周期</option>
+                  <option value="scalp">Scalp（超短）</option>
+                  <option value="intraday">日内</option>
+                  <option value="swing">波段</option>
+                  <option value="position">中长线</option>
+                </select>
+              </div>
+              <div class="field-label" style="margin-top:14px">交易方向</div>
+              <div class="choices">
+                <label class="choice"><input type="radio" name="direction" value="long" required><div><strong>做多 Long</strong><em>看涨，买入做多</em></div></label>
+                <label class="choice"><input type="radio" name="direction" value="short"><div><strong>做空 Short</strong><em>看跌，开仓做空</em></div></label>
+              </div>
+            </div>
+            <!-- 4. 进场理由 -->
+            <div class="form__step">
+              <h2 class="form__label"><span>4</span> 进场理由</h2>
+              <p class="form__hint">写下进场原因，理由越充分胜率常越高。</p>
+              <div class="reasons-list" id="reasonsList">
+                <div class="reason-item">
+                  <span class="num-badge">1</span>
+                  <input type="text" name="reason" placeholder="例如：日线突破关键阻力 + 成交量放大" maxlength="120">
+                </div>
+                <div class="reason-item">
+                  <span class="num-badge">2</span>
+                  <input type="text" name="reason" placeholder="例如：RSI 超卖后出现看涨背离" maxlength="120">
+                </div>
+                <div class="reasons-extra" id="reasonsExtra">
+                  <div class="reason-item">
+                    <span class="num-badge">3</span>
+                    <input type="text" name="reason" placeholder="例如：支撑位多次测试后守住" maxlength="120">
+                  </div>
+                  <div class="reason-item">
+                    <span class="num-badge">4</span>
+                    <input type="text" name="reason" placeholder="例如：与大盘 / BTC 走势背离" maxlength="120">
+                  </div>
+                  <div class="reason-item">
+                    <span class="num-badge">5</span>
+                    <input type="text" name="reason" placeholder="例如：资金费率极端，反向博弈" maxlength="120">
+                  </div>
+                  <div class="reason-item">
+                    <span class="num-badge">6</span>
+                    <input type="text" name="reason" placeholder="例如：重要新闻 / 事件驱动" maxlength="120">
+                  </div>
+                  <div class="reason-item">
+                    <span class="num-badge">7</span>
+                    <input type="text" name="reason" placeholder="例如：形态确认（头肩、旗形等）" maxlength="120">
+                  </div>
+                  <div class="reason-item">
+                    <span class="num-badge">8</span>
+                    <input type="text" name="reason" placeholder="例如：多周期共振" maxlength="120">
+                  </div>
+                  <div class="reason-item">
+                    <span class="num-badge">9</span>
+                    <input type="text" name="reason" placeholder="例如：风险回报比 ≥ 1:2" maxlength="120">
+                  </div>
+                  <div class="reason-item">
+                    <span class="num-badge">10</span>
+                    <input type="text" name="reason" placeholder="例如：符合自己的交易系统信号" maxlength="120">
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" class="reasons-toggle" id="reasonsToggle" onclick="toggleReasons()">
+                <span class="arrow">▼</span>
+                <span id="reasonsToggleText">展开更多理由（最多 10 条）</span>
+              </button>
+
+            </div>
+
+            <!-- 5. 交易截图 -->
+            <div class="form__step">
+              <h2 class="form__label"><span>5</span> 交易截图</h2>
+              <p class="form__hint">上传K线截图、持仓截图或订单记录。</p>
+              <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                <p>点击或拖拽图片到这里</p>
+                <p class="hint">支持 JPG、PNG、WebP，可多选</p>
+              </div>
+              <input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+              <div class="preview-grid" id="previewGrid"></div>
+            </div>
+
+            <!-- 6. 这一笔交易情绪 -->
+            <div class="form__step">
+              <h2 class="form__label"><span>6</span> 这一笔交易情绪</h2>
+              <p class="form__hint">记录交易时你的情绪，之后复盘更直观。</p>
+              <select id="emotion">
+                <option value="">选择情绪</option>
+                <option value="1">😰 恐慌 / 贪婪</option>
+                <option value="2">😟 焦虑 / 冲动</option>
+                <option value="3">😐 一般</option>
+                <option value="4">🙂 沉着</option>
+                <option value="5">😌 理性且自信</option>
+              </select>
+            </div>
+
+            <!-- 7. 是否符合交易纪律 -->
+            <div class="form__step">
+              <h2 class="form__label"><span>7</span> 是否符合交易纪律</h2>
+              <p class="form__hint">诚实评估这笔交易有没有遵守你的交易纪律。</p>
+              <div class="choices">
+                <label class="choice"><input type="radio" name="discipline" value="yes" required><div><strong>完全符合</strong><em>按计划执行，遵守纪律</em></div></label>
+                <label class="choice"><input type="radio" name="discipline" value="no"><div><strong>违反纪律</strong><em>存在情绪化或违规行为</em></div></label>
+              </div>
+            </div>
+
+            <!-- 8. 交易日期 -->
+            <div class="form__step">
+              <h2 class="form__label"><span>8</span> 交易日期</h2>
+              <p class="form__hint">选择这笔交易发生的日期。</p>
+              <input type="date" id="tradeDate" required>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--save">保存交易记录</button>
+          </form>
+        </div>
+      </section>
+    </section>
+
+    <!-- ======== VIEW HISTORY ======== -->
+    <section class="view" id="view-history" style="display:none">
+      <section class="pagehead section--dark">
+        <div class="wrap wrap--narrow">
+          <p class="eyebrow">Trade History</p>
+          <h1 class="display">历史</h1>
+          <p class="lede">回顾每一笔交易，找到哪些决策在做对的事，哪些在亏钱</p>
+        </div>
+      </section>
+      <section class="section">
+        <div class="wrap">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">符合筛选的交易</div><div class="stat-value" id="sumTotal">—</div></div>
+            <div class="stat-card"><div class="stat-label">已平仓</div><div class="stat-value" id="sumClosed">—</div></div>
+            <div class="stat-card"><div class="stat-label">胜率</div><div class="stat-value" id="sumWinrate">—</div></div>
+            <div class="stat-card"><div class="stat-label">累计盈亏</div><div class="stat-value" id="sumPnl">—</div></div>
+          </div>
+          <div class="toolbar">
+            <div class="grow" style="max-width:300px"><input type="search" id="fQ" placeholder="搜索交易对 / 理由 / 笔记…"></div>
+            <select id="fMarketType"><option value="">全部市场</option><option value="spot">现货</option><option value="futures">合约</option></select>
+            <select id="fDirection"><option value="">全部方向</option><option value="long">做多</option><option value="short">做空</option></select>
+            <select id="fResult"><option value="">全部结果</option><option value="win">盈利</option><option value="loss">亏损</option><option value="breakeven">持平</option><option value="open">持仓</option></select>
+            <select id="fMonth"><option value="">全部月份</option></select>
+            <button class="btn btn--ghost" id="btnReset">重置</button>
+          </div>
+          <div class="list-meta">
+            <span id="resultCount"></span>
+            <div id="pager" style="display:flex;gap:6px"></div>
+          </div>
+          <div class="card">
+            <div class="table-wrap">
+              <table class="table" id="tradeTable">
+                <thead><tr><th>日期</th><th>交易对</th><th>方向</th><th>市场</th><th>进场 → 出场</th><th>收益率</th><th>盈亏</th><th>结果</th><th>理由</th></tr></thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="histEmpty" style="display:none">
+              <div class="empty-icon">🗒</div>
+              <h3>还没有交易记录</h3>
+              <p>去记录第一笔交易，或者调整筛选条件再看看。</p>
+              <a class="btn btn--primary btn--row" href="#" onclick="switchView('record'); return false;">去记录</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="export" class="section">
+        <div class="wrap">
+          <div class="card">
+            <div class="card__head"><div><h3 class="card__title">数据导出与备份</h3><p class="card__sub">CSV 可用 Excel / Numbers 打开；JSON 备份包含截图，可完整恢复。</p></div></div>
+            <div class="toolbar" style="justify-content:flex-start;background:none;border:1px solid var(--line);padding:16px">
+              <button class="btn btn--sm btn--row" id="btnCsv">导出 CSV（当前筛选）</button>
+              <button class="btn btn--ghost btn--row" id="btnBackup">备份全部数据 (JSON)</button>
+              <button class="btn btn--ghost btn--row" id="btnRestore">从备份恢复</button>
+              <input type="file" id="fileRestore" accept=".json,application/json" style="display:none">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" style="padding-bottom:0">
+        <div class="wrap">
+          <div class="card">
+            <div class="card__head"><div><h3 class="card__title">数据同步（多设备）</h3><p class="card__sub">手机与 Mac 使用同一份数据。配置一次后无需手动备份导入。</p></div></div>
+            <div id="syncStatus" class="sync-status"></div>
+            <div class="toolbar" style="justify-content:flex-start;background:none;border:1px solid var(--line);padding:16px;flex-wrap:wrap">
+              <input id="syncUrl" type="text" placeholder="服务器地址，如 http://192.168.1.10:8737" style="flex:1;min-width:240px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px">
+              <button class="btn btn--sm btn--row" id="btnSyncConnect">连接并同步</button>
+              <button class="btn btn--ghost btn--row" id="btnSyncUpload">把本机数据上传到服务器</button>
+              <button class="btn btn--ghost btn--row" id="btnSyncDisconnect">断开同步（用本地数据）</button>
+            </div>
+          </div>
+          <p class="footer-note" style="padding-top:24px">数据保存在本地或你自己机器的服务器上，不会上传到第三方。手机连接同一网络后用浏览器打开服务器地址即可同步使用。</p>
+        </div>
+      </section>
+    </section>
+
+    <!-- ======== VIEW STATS ======== -->
+    <section class="view" id="view-stats" style="display:none">
+      <section class="pagehead section--dark">
+        <div class="wrap wrap--narrow">
+          <p class="eyebrow">Analytics</p>
+          <h1 class="display">让结果有迹可循</h1>
+          <p class="lede">时刻看清自己哪里在赚钱，哪里在情绪化交易</p>
+        </div>
+      </section>
+      <div class="review-tabs review-tabs--tight review-tabs--center wrap wrap--narrow">
+        <button class="review-tab active" id="tabPlaza" onclick="switchStatsTab('plaza'); return false;">交易广场</button>
+        <button class="review-tab" id="tabDashboard" onclick="switchStatsTab('dashboard'); return false;">数据看板</button>
+      </div>
+      <section class="section section--top-sm section--plaza" id="panelPlaza">
+        <div class="wrap wrap--narrow">
+          <div class="card card--flat">
+            <div id="plazaBoard"></div>
+          </div>
+        </div>
+      </section>
+      <section class="section section--top-sm" id="panelDashboard" style="display:none">
+        <div class="wrap">
+          <div class="empty" id="statsEmpty" style="display:none">
+            <div class="empty-icon">📊</div>
+            <h3>还没有统计数据</h3>
+            <p>先记录几笔交易，这里会生成胜率、盈亏分布、情绪等分析。</p>
+            <a class="btn btn--primary btn--row" href="#" onclick="switchView('record'); return false;">去记录</a>
+          </div>
+          <div class="chart-grid">
+            <div style="padding:0 22px" id="marketWrap">
+              <div id="marketChart"></div>
+            </div>
+            <div style="padding:0 22px" id="timeframeWrap">
+              <div id="timeframeChart"></div>
+            </div>
+            <div style="padding:0 22px" id="directionWrap">
+              <div id="directionChart"></div>
+            </div>
+            <div style="padding:0 22px" id="resultWrap">
+              <div id="resultChart"></div>
+            </div>
+            <div style="padding:0 22px" id="reasonsWrap">
+              <div id="reasonsChart"></div>
+            </div>
+            <div class="card">
+              <div class="card__head"><div><h3 class="card__title">情绪分布</h3><p class="card__sub">1 = 焦虑 / 贪婪，5 = 平静理性</p></div></div>
+              <div id="emotionChart"></div>
+            </div>
+            <div class="card" style="grid-column:1/-1">
+              <div class="card__head"><div><h3 class="card__title">纪律 vs 表现</h3><p class="card__sub" id="disciplineNote"></p></div></div>
+              <div id="pressureChart" style="margin-top:14px"></div>
+            </div>
+          </div>
+          <p class="footer-note" style="padding-top:24px">数据仅保存在本地（浏览器 / Mac 应用），不会上传到服务器。</p>
+        </div>
+      </section>
+    </section>
+
+    <!-- ======== VIEW CLUB ======== -->
+    <section class="view" id="view-review" style="display:none">
+      <section class="pagehead section--dark">
+        <div class="wrap wrap--narrow">
+          <p class="eyebrow">Review</p>
+          <h1 class="display">复盘是优秀交易者的标配</h1>
+          <p class="lede">回顾每一笔交易，提炼下一次更好的自己</p>
+        </div>
+      </section>
+      <div class="review-tabs wrap wrap--narrow">
+        <button class="review-tab active" id="tabDiary" onclick="switchReviewTab('diary')">我的笔记</button>
+        <button class="review-tab" id="tabWrite" onclick="startNewNote()">记录复盘</button>
+        <button class="review-tab" id="tabSummary" onclick="switchReviewTab('summary')">复盘总结</button>
+      </div>
+      <section class="section" id="panelDiary">
+        <div class="wrap wrap--narrow">
+          <div class="card card--flat">
+            <div id="noteFilterBar" class="note-filter-bar" hidden></div>
+            <div id="noteTimeline"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="panelWrite" style="display:none">
+        <div class="wrap wrap--narrow">
+          <div class="card card--flat">
+            <label class="note-field-label" for="noteTitle">标题</label>
+            <input type="text" id="noteTitle" class="note-input" maxlength="60" placeholder="本次复盘的主题是什么？">
+            <div class="form__step note-kind">
+              <div class="choices">
+                <label class="choice"><input type="radio" name="noteKind" value="gain" checked><div><strong>经验 Gain</strong><em>做对的，继续保持</em></div></label>
+                <label class="choice"><input type="radio" name="noteKind" value="lesson"><div><strong>教训 Lesson</strong><em>踩过的坑，下次绕开</em></div></label>
+              </div>
+            </div>
+            <label class="note-field-label" for="noteBody">正文</label>
+            <textarea id="noteBody" class="note-textarea" maxlength="1000" placeholder="正文：交易结束后写下经验教训，下次复盘时一目了然……"></textarea>
+            <div class="note-editor">
+              <span class="note-count" id="noteCount">0</span>
+              <button type="button" class="btn btn--primary btn--save" id="noteSave" onclick="saveReviewNote()">保存复盘笔记</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="panelSummary" style="display:none">
+        <div class="wrap wrap--narrow">
+          <div class="card card--flat">
+            <div class="summary-stats" id="summaryStats"></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="note-filter" id="noteFilter" hidden>
+        <div class="note-filter__mask" onclick="closeNoteFilter()"></div>
+        <div class="note-filter__sheet">
+          <div class="note-filter__head">
+            <button type="button" class="note-filter__arrow" onclick="noteFilterYear(-1)">&lsaquo;</button>
+            <span class="note-filter__year" id="noteFilterYear"></span>
+            <button type="button" class="note-filter__arrow" onclick="noteFilterYear(1)">&rsaquo;</button>
+          </div>
+          <div class="note-filter__grid" id="noteFilterMonths"></div>
+          <div class="note-filter__foot">
+            <button type="button" class="note-card__btn" onclick="clearNoteFilter()">显示全部</button>
+            <button type="button" class="note-card__btn" onclick="closeNoteFilter()">取消</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-club" style="display:none">
+      <section class="pagehead section--dark">
+        <div class="wrap wrap--narrow">
+          <p class="eyebrow">Community</p>
+          <h1 class="display">交易者共享俱乐部</h1>
+          <p class="lede">只属于我们的交易交流空间</p>
+        </div>
+      </section>
+      <div class="review-tabs wrap wrap--narrow">
+        <button class="review-tab" id="clubTabFeed" onclick="switchClubTab('feed'); return false;">最新动态</button>
+        <button class="review-tab active" id="clubTabBooks" onclick="switchClubTab('books'); return false;">书籍推荐</button>
+                <button class="review-tab" id="clubTabTools" onclick="switchClubTab('tools'); return false;">常用工具</button>
+                <button class="review-tab" id="clubTabIndicator" onclick="switchClubTab('indicator'); return false;">交易指标</button>
+        <button class="review-tab" id="clubTabStory" onclick="switchClubTab('story'); return false;">作者故事</button>
+      </div>
+
+      <section class="section section--books" id="panelBooks">
+        <div class="wrap wrap--narrow">
+            <div class="card card--flat">
+              <div class="card__head book-intro"><div><h3 class="card__title book-title-lg">读书是最低成本取众家之长的路径之一，如果建立了系统框架，知识更容易转化，结合过往的读书经验，我花了一些时间，整理了一份交易书单，它们每一本都给了我很大的引导和启发，希望同样对你也有帮助！</h3></div></div>
+            <div class="book-list" id="bookList">
+<div class="book-card" data-id="book1"><img class="book-cover" src="covers/book1.png" alt="股票作手回忆录"><div class="book-title">股票作手回忆录</div><div class="book-subtitle">埃德温·勒费弗</div><div class="book-summary" style="display:none">本书是华尔街传奇操盘手杰西·利弗莫尔的传记式经典。书中记录了他从14岁入市到数次大起大落的交易生涯，深刻揭示了市场趋势、人性弱点与交易纪律的关系。对任何想在市场中长期生存的交易者而言，这都是一本必读之作。</div></div>
+        <div class="book-card" data-id="book2"><img class="book-cover" src="covers/book2.png" alt="纪律交易者"><div class="book-title">纪律交易者</div><div class="book-subtitle">马克·道格拉斯</div><div class="book-summary" style="display:none">马克·道格拉斯经典之作。书中直指交易者亏损的根源并非技术不足，而是心理与纪律的缺失。通过系统的训练方法，帮助交易者建立赢家心智，克服恐惧与贪婪，在市场中保持一致性盈利。</div></div>
+        <div class="book-card" data-id="book3"><img class="book-cover" src="covers/book3.png" alt="海龟交易法"><div class="book-title">海龟交易法</div><div class="book-subtitle">柯蒂斯·费思</div><div class="book-summary" style="display:none">原汁原味的海龟交易实验亲历者回忆录。详细披露了理查德·丹尼斯与威廉·埃克哈特的传奇赌局，以及海龟们如何被训练成顶尖交易员。书中完整阐释了趋势跟踪系统的核心规则与资金管理方法。</div></div>
+        <div class="book-card" data-id="book4"><img class="book-cover" src="covers/book4.png" alt="道氏理论"><div class="book-title">道氏理论</div><div class="book-subtitle">罗伯特·雷亚</div><div class="book-summary" style="display:none">道氏理论是技术分析的基石。书中系统阐述了市场趋势的三种级别、指数相互验证原则以及成交量确认原则，为后续所有技术分析方法奠定了理论基础。</div></div>
+        <div class="book-card" data-id="book5"><img class="book-cover" src="covers/book5.png" alt="赚钱，再自然不过"><div class="book-title">赚钱，再自然不过</div><div class="book-subtitle">马克·道格拉斯</div><div class="book-summary" style="display:none">交易心理分析经典之作。马克·道格拉斯指出交易者亏损的根源并非技术不足，而是心理与纪律的缺失。通过系统的训练方法，帮助交易者建立赢家心智，克服恐惧与贪婪，在市场中保持一致性盈利。</div></div>
+        <div class="book-card" data-id="book6"><img class="book-cover" src="covers/book6.png" alt="易交易为生"><div class="book-title">易交易为生</div><div class="book-subtitle">迈克·贝拉菲奥雷</div><div class="book-summary" style="display:none">一位全职交易员的实战心法。书中分享了如何在市场中稳定盈利的心态管理方法，强调交易纪律、风险控制与情绪管理的重要性，适合希望以交易为生的读者阅读。</div></div>
+        <div class="book-card" data-id="book7"><img class="book-cover" src="covers/book7.png" alt="趋势交易法"><div class="book-title">趋势交易法</div><div class="book-subtitle">鹿希武</div><div class="book-summary" style="display:none">趋势交易法的权威著作。书中系统阐述了趋势交易法的核心原理、策略框架与实战应用，揭示了如何在交易中识别并跟随大趋势，实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book8"><img class="book-cover" src="covers/book8.png" alt="海龟交易法则"><div class="book-title">海龟交易法则</div><div class="book-subtitle">柯蒂斯·费思</div><div class="book-summary" style="display:none">海龟交易法则的权威著作。书中系统阐述了海龟交易法则的核心原理、策略框架与实战应用，揭示了如何在交易中遵循系统化规则，实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book9"><img class="book-cover" src="covers/book9.png" alt="日本蜡烛图技术"><div class="book-title">日本蜡烛图技术</div><div class="book-subtitle">史蒂夫·尼森</div><div class="book-summary" style="display:none">日本蜡烛图技术的权威著作。书中系统阐述了日本蜡烛图技术的核心原理、策略框架与实战应用，揭示了如何在交易中通过K线形态分析市场，实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book10"><img class="book-cover" src="covers/book10.png" alt="期货市场技术分析"><div class="book-title">期货市场技术分析</div><div class="book-subtitle">约翰·墨菲</div><div class="book-summary" style="display:none">期货市场技术分析的权威著作。书中系统阐述了期货市场技术分析的核心原理、策略框架与实战应用，揭示了如何在期货市场中通过技术分析实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book11"><img class="book-cover" src="covers/book11.png" alt="股票大作手操盘术"><div class="book-title">股票大作手操盘术</div><div class="book-subtitle">杰西·利弗莫尔</div><div class="book-summary" style="display:none">股票大作手操盘术的权威著作。书中系统阐述了股票大作手操盘术的核心原理、策略框架与实战应用，揭示了如何在股票交易中通过系统化方法实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book12"><img class="book-cover" src="covers/book12.png" alt="交易心理分析"><div class="book-title">交易心理分析</div><div class="book-subtitle">马克·道格拉斯</div><div class="book-summary" style="display:none">交易心理分析的权威著作。书中系统阐述了交易心理分析的核心原理、策略框架与实战应用，揭示了如何在交易中保持纪律性，克服人性弱点，实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book13"><img class="book-cover" src="covers/book13.png" alt="澄明之境"><div class="book-title">澄明之境</div><div class="book-subtitle">青泽</div><div class="book-summary" style="display:none">交易哲学经典之作。青泽基于康德哲学提出"人为市场立法"的投资哲学，深入探讨投资中的不确定性、风险与心态、思路与策略，是交易者从术到道的进阶之作。</div></div>
+        <div class="book-card" data-id="book14"><img class="book-cover" src="covers/book14.png" alt="海龟交易法则"><div class="book-title">海龟交易法则</div><div class="book-subtitle">柯蒂斯·费思</div><div class="book-summary" style="display:none">海龟交易法则的权威著作。书中系统阐述了海龟交易法则的核心原理、策略框架与实战应用，揭示了如何在交易中遵循系统化规则，实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book15"><img class="book-cover" src="covers/book15.png" alt="日本蜡烛图技术"><div class="book-title">日本蜡烛图技术</div><div class="book-subtitle">史蒂夫·尼森</div><div class="book-summary" style="display:none">日本蜡烛图技术的权威著作。书中系统阐述了日本蜡烛图技术的核心原理、策略框架与实战应用，揭示了如何在交易中通过K线形态分析市场，实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book16"><img class="book-cover" src="covers/book16.png" alt="期货市场技术分析"><div class="book-title">期货市场技术分析</div><div class="book-subtitle">约翰·墨菲</div><div class="book-summary" style="display:none">期货市场技术分析的权威著作。书中系统阐述了期货市场技术分析的核心原理、策略框架与实战应用，揭示了如何在期货市场中通过技术分析实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book17"><img class="book-cover" src="covers/book17.png" alt="股票大作手操盘术"><div class="book-title">股票大作手操盘术</div><div class="book-subtitle">杰西·利弗莫尔</div><div class="book-summary" style="display:none">股票大作手操盘术的权威著作。书中系统阐述了股票大作手操盘术的核心原理、策略框架与实战应用，揭示了如何在股票交易中通过系统化方法实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book18"><img class="book-cover" src="covers/book18.png" alt="交易心理分析"><div class="book-title">交易心理分析</div><div class="book-subtitle">马克·道格拉斯</div><div class="book-summary" style="display:none">交易心理分析的权威著作。书中系统阐述了交易心理分析的核心原理、策略框架与实战应用，揭示了如何在交易中保持纪律性，克服人性弱点，实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book19"><img class="book-cover" src="covers/book19.png" alt="交易的逻辑"><div class="book-title">交易的逻辑</div><div class="book-subtitle">马克·费舍尔</div><div class="book-summary" style="display:none">Mark B. Fisher经典交易之作。书中阐述了ACD交易方法，通过开盘区间确定买卖点位，将交易系统化、规则化。书中揭示了如何将复杂的市场行为简化为可执行的交易逻辑，帮助交易者建立系统化的交易框架，在市场中保持一致性盈利。</div></div>
+        <div class="book-card" data-id="book20"><img class="book-cover" src="covers/book20.png" alt="趋势跟踪"><div class="book-title">趋势跟踪</div><div class="book-subtitle">迈克尔·科沃尔</div><div class="book-summary" style="display:none">趋势跟踪策略的权威著作。书中系统阐述了趋势跟踪的核心原理、策略框架与实战应用，揭示了如何在市场中识别并跟随大趋势，实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book21"><img class="book-cover" src="covers/book21.png" alt="趋势交易法"><div class="book-title">趋势交易法</div><div class="book-subtitle">鹿希武</div><div class="book-summary" style="display:none">趋势交易法的权威著作。书中系统阐述了趋势交易法的核心原理、策略框架与实战应用，揭示了如何在交易中识别并跟随大趋势，实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book22"><img class="book-cover" src="covers/book22.png" alt="交易的逻辑"><div class="book-title">交易的逻辑</div><div class="book-subtitle">马克·费舍尔</div><div class="book-summary" style="display:none">Mark B. Fisher经典交易之作。书中阐述了ACD交易方法，通过开盘区间确定买卖点位，将交易系统化、规则化。书中揭示了如何将复杂的市场行为简化为可执行的交易逻辑，帮助交易者建立系统化的交易框架，在市场中保持一致性盈利。</div></div>
+        <div class="book-card" data-id="book23"><img class="book-cover" src="covers/book23.png" alt="趋势交易法"><div class="book-title">趋势交易法</div><div class="book-subtitle">鹿希武</div><div class="book-summary" style="display:none">趋势交易法的权威著作。书中系统阐述了趋势交易法的核心原理、策略框架与实战应用，揭示了如何在交易中识别并跟随大趋势，实现长期稳定盈利。</div></div>
+        <div class="book-card" data-id="book24"><img class="book-cover" src="covers/book24.png" alt="趋势跟踪"><div class="book-title">趋势跟踪</div><div class="book-subtitle">迈克尔·科沃尔</div><div class="book-summary" style="display:none">趋势跟踪策略的权威著作。书中系统阐述了趋势跟踪的核心原理、策略框架与实战应用，揭示了如何在市场中识别并跟随大趋势，实现长期稳定盈利。</div></div>
+        </div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="section" id="panelFeed" style="display:none">
+        <div class="wrap wrap--narrow">
+          <div class="card card--flat">
+            <div class="card__head"><div><h3 class="card__title">社区动态</h3><p class="card__sub">圈子里的新想法与互动，热闹都在这里。</p></div></div>
+            <div class="empty" id="clubEmptyFeed"><div class="empty-icon">🫂</div><h3>还没有动态</h3><p>有动态会第一时间冒出来。</p></div>
+          </div>
+        </div>
+      </section>
+      <section class="section" id="panelStory" style="display:none">
+        <div class="wrap wrap--narrow">
+          <div class="card card--flat">
+            <div class="card__head"><div><h3 class="card__title">我的故事</h3><p class="card__sub">从第一笔交易开始的成长记录，慢慢写给自己看。</p></div></div>
+            <div class="empty" id="clubEmptyStory"><div class="empty-icon">✍️</div><h3>故事还没开始</h3><p>想写的时候，就从这里落笔。</p></div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <audio id="globalAudio" src="audio/交易冥想练习-叁生资管-达达.mp3" loop preload="metadata"></audio>
+
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal__head">
+        <h2 class="modal__title" id="modalTitle"></h2>
+        <button class="modal__close" id="modalClose" aria-label="关闭">✕</button>
+      </div>
+      <div id="modalBody"></div>
+      <div class="modal__actions">
+        <button class="btn btn--danger-ghost" id="modalDelete">删除这笔交易</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js?v=5888"></script>
+  <script src="js/history.js?v=5888"></script>
+  <script src="js/stats.js?v=5888"></script>
+  <script>
+    /* Router */
+    function switchView(v) {
+      document.querySelectorAll('.view').forEach(el => {
+        el.style.display = el.id === 'view-' + v ? '' : 'none';
+      });
+      document.querySelectorAll('.nav__links a').forEach(a => {
+        a.classList.toggle('active', a.dataset.view === v);
+      });
+      if (v === 'history' && window.__historyReload) window.__historyReload();
+      if (v === 'stats' && window.__statsReload) window.__statsReload();
+      if (v === 'review' && window.__notesReload) window.__notesReload();
+    }
+
+    /* Review sub-tabs */
+    function switchClubTab(tab) {
+      document.getElementById("clubTabBooks").classList.toggle("active", tab === "books");
+      document.getElementById("clubTabFeed").classList.toggle("active", tab === "feed");
+      document.getElementById("clubTabStory").classList.toggle("active", tab === "story");
+      document.getElementById("panelBooks").style.display = tab === "books" ? "" : "none";
+      document.getElementById("panelFeed").style.display = tab === "feed" ? "" : "none";
+      document.getElementById("panelStory").style.display = tab === "story" ? "" : "none";
+      if (tab === "books") renderBooks();
+    }
+    window.books = [
+         { id: 'book1', title: '股票作手回忆录', author: '埃德温·勒费弗', cover: 'covers/book1.png', initial: '', summary: '本书是华尔街传奇操盘手杰西·利弗莫尔的传记式经典。书中记录了他从14岁入市到数次大起大落的交易生涯，深刻揭示了市场趋势、人性弱点与交易纪律的关系。对任何想在市场中长期生存的交易者而言，这都是一本必读之作。' },
+         { id: 'book2', title: '纪律交易者', author: '马克·道格拉斯', cover: 'covers/book2.png', initial: '', summary: '马克·道格拉斯经典之作。书中直指交易者亏损的根源并非技术不足，而是心理与纪律的缺失。通过系统的训练方法，帮助交易者建立赢家心智，克服恐惧与贪婪，在市场中保持一致性盈利。' },
+         { id: 'book3', title: '海龟交易法', author: '柯蒂斯·费思', cover: 'covers/book3.png', initial: '', summary: '原汁原味的海龟交易实验亲历者回忆录。详细披露了理查德·丹尼斯与威廉·埃克哈特的传奇赌局，以及海龟们如何被训练成顶尖交易员。书中完整阐释了趋势跟踪系统的核心规则与资金管理方法。' },
+         { id: 'book4', title: '道氏理论', author: '罗伯特·雷亚', cover: 'covers/book4.png', initial: '', summary: '道氏理论是技术分析的基石。书中系统阐述了市场趋势的三种级别、指数相互验证原则以及成交量确认原则，为后续所有技术分析方法奠定了理论基础。' },
+         { id: 'book5', title: '赚钱，再自然不过', author: '马克·道格拉斯', cover: 'covers/book5.png', initial: '', summary: '交易心理分析经典之作。马克·道格拉斯指出交易者亏损的根源并非技术不足，而是心理与纪律的缺失。通过系统的训练方法，帮助交易者建立赢家心智，克服恐惧与贪婪，在市场中保持一致性盈利。' },
+         { id: 'book6', title: '易交易为生', author: '迈克·贝拉菲奥雷', cover: 'covers/book6.png', initial: '', summary: '一位全职交易员的实战心法。书中分享了如何在市场中稳定盈利的心态管理方法，强调交易纪律、风险控制与情绪管理的重要性，适合希望以交易为生的读者阅读。' },
+         { id: 'book7', title: '趋势交易法', author: '鹿希武', cover: 'covers/book7.png', initial: '', summary: '趋势交易法的权威著作。书中系统阐述了趋势交易法的核心原理、策略框架与实战应用，揭示了如何在交易中识别并跟随大趋势，实现长期稳定盈利。' },
+         { id: 'book8', title: '海龟交易法则', author: '柯蒂斯·费思', cover: 'covers/book8.png', initial: '', summary: '海龟交易法则的权威著作。书中系统阐述了海龟交易法则的核心原理、策略框架与实战应用，揭示了如何在交易中遵循系统化规则，实现长期稳定盈利。' },
+         { id: 'book9', title: '日本蜡烛图技术', author: '史蒂夫·尼森', cover: 'covers/book9.png', initial: '', summary: '日本蜡烛图技术的权威著作。书中系统阐述了日本蜡烛图技术的核心原理、策略框架与实战应用，揭示了如何在交易中通过K线形态分析市场，实现长期稳定盈利。' },
+         { id: 'book10', title: '期货市场技术分析', author: '约翰·墨菲', cover: 'covers/book10.png', initial: '', summary: '期货市场技术分析的权威著作。书中系统阐述了期货市场技术分析的核心原理、策略框架与实战应用，揭示了如何在期货市场中通过技术分析实现长期稳定盈利。' },
+         { id: 'book11', title: '股票大作手操盘术', author: '杰西·利弗莫尔', cover: 'covers/book11.png', initial: '', summary: '股票大作手操盘术的权威著作。书中系统阐述了股票大作手操盘术的核心原理、策略框架与实战应用，揭示了如何在股票交易中通过系统化方法实现长期稳定盈利。' },
+         { id: 'book12', title: '交易心理分析', author: '马克·道格拉斯', cover: 'covers/book12.png', initial: '', summary: '交易心理分析的权威著作。书中系统阐述了交易心理分析的核心原理、策略框架与实战应用，揭示了如何在交易中保持纪律性，克服人性弱点，实现长期稳定盈利。' },
+         { id: 'book13', title: '澄明之境', author: '青泽', cover: 'covers/book13.png', initial: '', summary: '交易哲学经典之作。青泽基于康德哲学提出"人为市场立法"的投资哲学，深入探讨投资中的不确定性、风险与心态、思路与策略，是交易者从术到道的进阶之作。' },
+         { id: 'book14', title: '海龟交易法则', author: '柯蒂斯·费思', cover: 'covers/book14.png', initial: '', summary: '海龟交易法则的权威著作。书中系统阐述了海龟交易法则的核心原理、策略框架与实战应用，揭示了如何在交易中遵循系统化规则，实现长期稳定盈利。' },
+         { id: 'book15', title: '日本蜡烛图技术', author: '史蒂夫·尼森', cover: 'covers/book15.png', initial: '', summary: '日本蜡烛图技术的权威著作。书中系统阐述了日本蜡烛图技术的核心原理、策略框架与实战应用，揭示了如何在交易中通过K线形态分析市场，实现长期稳定盈利。' },
+         { id: 'book16', title: '期货市场技术分析', author: '约翰·墨菲', cover: 'covers/book16.png', initial: '', summary: '期货市场技术分析的权威著作。书中系统阐述了期货市场技术分析的核心原理、策略框架与实战应用，揭示了如何在期货市场中通过技术分析实现长期稳定盈利。' },
+         { id: 'book17', title: '股票大作手操盘术', author: '杰西·利弗莫尔', cover: 'covers/book17.png', initial: '', summary: '股票大作手操盘术的权威著作。书中系统阐述了股票大作手操盘术的核心原理、策略框架与实战应用，揭示了如何在股票交易中通过系统化方法实现长期稳定盈利。' },
+         { id: 'book18', title: '交易心理分析', author: '马克·道格拉斯', cover: 'covers/book18.png', initial: '', summary: '交易心理分析的权威著作。书中系统阐述了交易心理分析的核心原理、策略框架与实战应用，揭示了如何在交易中保持纪律性，克服人性弱点，实现长期稳定盈利。' },
+         { id: 'book19', title: '交易的逻辑', author: '马克·费舍尔', cover: 'covers/book19.png', initial: '', summary: 'Mark B. Fisher经典交易之作。书中阐述了ACD交易方法，通过开盘区间确定买卖点位，将交易系统化、规则化。书中揭示了如何将复杂的市场行为简化为可执行的交易逻辑，帮助交易者建立系统化的交易框架，在市场中保持一致性盈利。' },
+         { id: 'book20', title: '趋势跟踪', author: '迈克尔·科沃尔', cover: 'covers/book20.png', initial: '', summary: '趋势跟踪策略的权威著作。书中系统阐述了趋势跟踪的核心原理、策略框架与实战应用，揭示了如何在市场中识别并跟随大趋势，实现长期稳定盈利。' },
+         { id: 'book21', title: '趋势交易法', author: '鹿希武', cover: 'covers/book21.png', initial: '', summary: '趋势交易法的权威著作。书中系统阐述了趋势交易法的核心原理、策略框架与实战应用，揭示了如何在交易中识别并跟随大趋势，实现长期稳定盈利。' },
+         { id: 'book22', title: '交易的逻辑', author: '马克·费舍尔', cover: 'covers/book22.png', initial: '', summary: 'Mark B. Fisher经典交易之作。书中阐述了ACD交易方法，通过开盘区间确定买卖点位，将交易系统化、规则化。书中揭示了如何将复杂的市场行为简化为可执行的交易逻辑，帮助交易者建立系统化的交易框架，在市场中保持一致性盈利。' },
+         { id: 'book23', title: '趋势交易法', author: '鹿希武', cover: 'covers/book23.png', initial: '', summary: '趋势交易法的权威著作。书中系统阐述了趋势交易法的核心原理、策略框架与实战应用，揭示了如何在交易中识别并跟随大趋势，实现长期稳定盈利。' },
+         { id: 'book24', title: '趋势跟踪', author: '迈克尔·科沃尔', cover: 'covers/book24.png', initial: '', summary: '趋势跟踪策略的权威著作。书中系统阐述了趋势跟踪的核心原理、策略框架与实战应用，揭示了如何在市场中识别并跟随大趋势，实现长期稳定盈利。' }
+    ];
+    function renderBooks() {
+         var list = document.getElementById('bookList');
+         if (!list) return;
+         if (!window.books.length) { list.innerHTML = '<div class="empty" id="clubEmptyBooks"><div class="empty-icon">📚</div><h3>还没有书籍</h3><p>读过一本好书，就在这里分享。</p></div>'; return; }
+         var html = '<div class="book-list">';
+         for (var i = 0; i < window.books.length; i++) {
+             var b = window.books[i];
+             html += '<div class="book-card" onclick="window.toggleBookDetail(\'' + b.id + '\')">' +
+                 '<img class="book-cover" src="' + b.cover + '" alt="' + b.title + '">' +
+                 '<div class="book-title">' + b.title + '</div>' +
+                 '</div>';
+         }
+         html += '<div class="book-detail-full" id="bookDetail-full">' +
+             '<div style="color:var(--muted);font-size:10.8px;margin-right:20px;white-space:nowrap" id="bookDetailAuthor"></div>' +
+             '<div style="font-size:8.64px;line-height:1.8;color:var(--ink-soft)" id="bookDetailSummary"></div>' +
+             '</div></div>';
+         list.innerHTML = html;
+       }
+       function toggleBookDetail(id) {
+         var full = document.getElementById('bookDetail-full');
+         if (!full) return;
+         var b = null;
+         for (var i = 0; i < window.books.length; i++) {
+           if (window.books[i].id === id) { b = window.books[i]; break; }
+         }
+         if (!b) return;
+         document.getElementById('bookDetailAuthor').textContent = b.author;
+         document.getElementById('bookDetailSummary').textContent = b.summary;
+         full.style.display = full.style.display === 'flex' ? 'none' : 'flex';
+       }
+       window.toggleBookDetail = toggleBookDetail;
+
+    function switchReviewTab(tab) {
+      document.getElementById('tabDiary').classList.toggle('active', tab === 'diary');
+      document.getElementById('tabWrite').classList.toggle('active', tab === 'write');
+      document.getElementById('tabSummary').classList.toggle('active', tab === 'summary');
+      document.getElementById('panelDiary').style.display = tab === 'diary' ? '' : 'none';
+      document.getElementById('panelWrite').style.display = tab === 'write' ? '' : 'none';
+      document.getElementById('panelSummary').style.display = tab === 'summary' ? '' : 'none';
+      if (tab === 'summary') renderSummary();
+    }
+
+    function switchStatsTab(tab) {
+      document.getElementById('tabPlaza').classList.toggle('active', tab === 'plaza');
+      document.getElementById('tabDashboard').classList.toggle('active', tab === 'dashboard');
+      document.getElementById('panelPlaza').style.display = tab === 'plaza' ? '' : 'none';
+      document.getElementById('panelDashboard').style.display = tab === 'dashboard' ? '' : 'none';
+    }
+
+    /* Global audio player */
+    (function () {
+      const btn = document.getElementById('audioToggle');
+      const audio = document.getElementById('globalAudio');
+      if (!btn || !audio) return;
+      function set(on) {
+        btn.classList.toggle('playing', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+      btn.addEventListener('click', () => {
+        if (audio.paused) audio.play().then(() => set(true)).catch(() => {});
+        else { audio.pause(); set(false); }
+      });
+      audio.addEventListener('play', () => set(true));
+      audio.addEventListener('pause', () => set(false));
+    })();
+
+    /* Record page logic (merged from original index.html inline) */
+    let _b64shots = [];
+    function toggleReasons() {
+      const extra = document.getElementById('reasonsExtra');
+      const btn = document.getElementById('reasonsToggle');
+      const text = document.getElementById('reasonsToggleText');
+      const isOpen = extra.classList.toggle('show');
+      btn.classList.toggle('open', isOpen);
+      text.textContent = isOpen ? '收起额外理由' : '展开更多理由（最多 10 条）';
+    }
+    const uploadZone = document.getElementById('uploadZone');
+    const previewGrid = document.getElementById('previewGrid');
+    if (uploadZone) {
+      uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+      uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+      uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+      });
+    }
+    function renderPreviews() {
+      if (!previewGrid) return;
+      previewGrid.innerHTML = '';
+      _b64shots.forEach((src, i) => {
+        const div = document.createElement('div');
+        div.className = 'preview-item';
+        div.innerHTML = '<img src="' + src + '" alt="screenshot">' +
+          '<button type="button" class="remove" onclick="removeImage(' + i + ')">×</button>';
+        previewGrid.appendChild(div);
+      });
+    }
+    function removeImage(index) {
+      _b64shots.splice(index, 1);
+      renderPreviews();
+    }
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+        if (_b64shots.length >= 5) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          _b64shots.push(e.target.result);
+          renderPreviews();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    document.addEventListener('paste', e => {
+      const files = [...e.clipboardData.items].filter(i => i.type.startsWith('image/')).map(i => i.getAsFile()).filter(Boolean);
+      if (files.length) handleFiles(files);
+    });
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const reasons = [];
+      document.querySelectorAll('input[name="reason"]').forEach(el => {
+        const v = el.value.trim();
+        if (v) reasons.push(v);
+      });
+      const trade = {
+        date: document.getElementById('tradeDate').value,
+        timeframe: document.getElementById('timeframe').value,
+        marketType: document.querySelector('input[name="marketType"]:checked')?.value,
+        pair: document.getElementById('pair').value.trim(),
+        direction: document.querySelector('input[name="direction"]:checked')?.value,
+        result: document.querySelector('input[name="result"]:checked')?.value || 'open',
+        entryPrice: document.getElementById('entryPrice')?.value || '',
+        exitPrice: document.getElementById('exitPrice')?.value || '',
+        stopLoss: document.getElementById('stopLoss')?.value || '',
+        marginAmount: document.getElementById('marginAmount')?.value || '',
+        discipline: document.querySelector('input[name="discipline"]:checked')?.value,
+        emotion: document.getElementById('emotion')?.value || null,
+        reasons,
+        screenshots: _b64shots,
+        createdAt: new Date().toISOString()
+      };
+      await CJ.saveTrade(trade);
+      document.getElementById('tradeForm').classList.add('hidden');
+      document.getElementById('successState').classList.add('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    /* Review notes */
+    const noteBody = document.getElementById('noteBody');
+    const noteCount = document.getElementById('noteCount');
+    if (noteBody) {
+      noteBody.addEventListener('input', () => {
+        noteCount.textContent = noteBody.value.length;
+      if (noteBody.value.length > 1000) { noteBody.value = noteBody.value.slice(0,1000); noteCount.textContent = 1000; }
+      });
+    }
+    let editingNoteId = null;
+    window.__pendingReviewTrade = null;
+    window.__pendingReviewResult = null;
+    function startNewNote() {
+      window.__pendingReviewTrade = null;
+      window.__pendingReviewResult = null;
+      editingNoteId = null;
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteBody').value = '';
+      if (noteCount) noteCount.textContent = '0';
+      const btn = document.getElementById('noteSave');
+      if (btn) btn.textContent = '保存复盘笔记';
+      switchReviewTab('write');
+    }
+    async function editReviewNote(id) {
+      const list = await CJ.getAllNotes();
+      const n = list.find(x => x.id === id);
+      if (!n) return;
+      editingNoteId = id;
+      document.getElementById('noteTitle').value = n.title || '';
+      document.getElementById('noteBody').value = n.body || '';
+      const kind = n.kind === 'lesson' ? 'lesson' : 'gain';
+      const radio = document.querySelector('input[name="noteKind"][value="' + kind + '"]');
+      if (radio) radio.checked = true;
+      if (noteCount) noteCount.textContent = (n.body || '').length;
+      const btn = document.getElementById('noteSave');
+      if (btn) btn.textContent = '更新复盘笔记';
+      switchReviewTab('write');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    async function saveReviewNote() {
+      const title = document.getElementById('noteTitle').value.trim();
+      const body = document.getElementById('noteBody').value.trim();
+      const kind = document.querySelector('input[name="noteKind"]:checked')?.value || 'gain';
+      if (!title) { CJ.toast('请先填写标题', 'error'); return; }
+      if (!body) { CJ.toast('请填写正文内容', 'error'); return; }
+      let updated = false;
+      if (editingNoteId) {
+        const list = await CJ.getAllNotes();
+        const existing = list.find(x => x.id === editingNoteId);
+        await CJ.saveNote({
+          id: editingNoteId, title, body, kind,
+          createdAt: existing ? existing.createdAt : new Date().toISOString(),
+          tradeId: existing && existing.tradeId ? existing.tradeId : (window.__pendingReviewTrade || undefined),
+          result: existing && existing.result ? existing.result : (window.__pendingReviewResult || undefined)
+        });
+        updated = true;
+        editingNoteId = null;
+      } else {
+        await CJ.saveNote({
+          id: 'note-' + Date.now(), title, body, kind,
+          createdAt: new Date().toISOString(),
+          tradeId: window.__pendingReviewTrade || undefined,
+          result: window.__pendingReviewResult || undefined
+        });
+      }
+      const linked = window.__pendingReviewTrade;
+      window.__pendingReviewTrade = null;
+      window.__pendingReviewResult = null;
+      const btn = document.getElementById('noteSave');
+      if (btn) btn.textContent = '保存复盘笔记';
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteBody').value = '';
+      if (noteCount) noteCount.textContent = '0';
+      switchReviewTab('diary');
+      await renderReviewNotes();
+      if (linked && window.__statsReload) window.__statsReload();
+      CJ.toast(updated ? '复盘笔记已更新' : '复盘笔记已保存', 'ok');
+    }
+    async function deleteReviewNote(id) {
+      if (!confirm('确定删除这篇笔记吗？')) return;
+      await CJ.deleteNote(id);
+      await renderReviewNotes();
+      CJ.toast('笔记已删除');
+    }
+    async function renderSummary() {
+      const host = document.getElementById('summaryStats');
+      if (!host) return;
+      const list = await CJ.getAllNotes();
+      const gain = list.filter(n => n.kind !== 'lesson').length;
+      const lesson = list.length - gain;
+      host.innerHTML = '<div class="summary-row">' +
+        '<div class="summary-stat"><span class="summary-stat__num">' + list.length + '</span><span class="summary-stat__label">笔记总数</span></div>' +
+        '<div class="summary-stat summary-stat--gain"><span class="summary-stat__num">' + gain + '</span><span class="summary-stat__label">经验</span></div>' +
+        '<div class="summary-stat summary-stat--lesson"><span class="summary-stat__num">' + lesson + '</span><span class="summary-stat__label">教训</span></div>' +
+        '</div>';
+    }
+    let noteFilter = null;
+    let pickerYear = new Date().getFullYear();
+    function renderNoteFilterMonths() {
+      const host = document.getElementById('noteFilterMonths');
+      const yl = document.getElementById('noteFilterYear');
+      if (yl) yl.textContent = pickerYear + ' 年';
+      if (!host) return;
+      let html = '';
+      for (let m = 0; m < 12; m++) {
+        const active = noteFilter && noteFilter.year === pickerYear && noteFilter.month === m;
+        html += '<button type="button" class="note-filter__m' + (active ? ' active' : '') + '" onclick="applyNoteFilter(' + pickerYear + ',' + m + ')">' + (m + 1) + '月</button>';
+      }
+      host.innerHTML = html;
+    }
+    function openNoteFilter(year, month) {
+      if (typeof year === 'number') pickerYear = year;
+      else if (noteFilter) pickerYear = noteFilter.year;
+      const el = document.getElementById('noteFilter');
+      if (!el) return;
+      el.hidden = false;
+      renderNoteFilterMonths();
+    }
+    function closeNoteFilter() {
+      const el = document.getElementById('noteFilter');
+      if (el) el.hidden = true;
+    }
+    function noteFilterYear(delta) {
+      pickerYear += delta;
+      renderNoteFilterMonths();
+    }
+    function applyNoteFilter(year, month) {
+      noteFilter = { year, month };
+      closeNoteFilter();
+      renderReviewNotes();
+    }
+    function clearNoteFilter() {
+      noteFilter = null;
+      closeNoteFilter();
+      renderReviewNotes();
+    }
+    async function renderReviewNotes() {
+      const host = document.getElementById('noteTimeline');
+      if (!host) return;
+      let list = await CJ.getAllNotes();
+      if (noteFilter) {
+        list = list.filter(n => {
+          const d = new Date(n.createdAt);
+          return d.getFullYear() === noteFilter.year && d.getMonth() === noteFilter.month;
+        });
+      }
+      const bar = document.getElementById('noteFilterBar');
+      if (bar) {
+        if (noteFilter) {
+          bar.hidden = false;
+          bar.innerHTML = '<button type="button" class="note-filter__chip" onclick="clearNoteFilter()">' + noteFilter.year + ' 年 ' + (noteFilter.month + 1) + ' 月 ✕</button>';
+        } else {
+          bar.hidden = true;
+          bar.innerHTML = '';
+        }
+      }
+      if (!list.length) {
+        host.innerHTML = noteFilter
+          ? '<div class="empty" style="display:block"><div class="empty-icon">📖</div><h3>该月份没有笔记</h3><p>点上方标签可「显示全部」。</p></div>'
+          : '<div class="empty" style="display:block"><div class="empty-icon">📖</div><h3>还没有笔记</h3><p>点上面「记录复盘」，记下你对交易的新思考。</p></div>';
+        return;
+      }
+      host.innerHTML = list.map(n => {
+        const d = new Date(n.createdAt);
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const when = mm + '/' + dd;
+        const kind = n.kind === 'lesson' ? 'lesson' : 'gain';
+        return '<article class="note-card">' +
+          '<div class="note-card__top">' +
+          '<span class="note-card__meta"><span class="note-card__date" onclick="openNoteFilter(' + d.getFullYear() + ',' + d.getMonth() + ')">' + when + '</span></span>' +
+          '<span class="note-card__bar note-card__bar--' + kind + '"></span>' +
+          '<h4 class="note-card__title" onclick="toggleNoteBody(\'' + n.id + '\')">' + CJ.esc(n.title) + '</h4>' +
+          '</div>' +
+          '<div class="note-card__body" id="note-body-' + n.id + '" hidden>' +
+          '<div class="note-card__text">' + CJ.esc(n.body) + '</div>' +
+          '<div class="note-card__actions">' +
+          '<button type="button" class="note-card__btn" onclick="editReviewNote(\'' + n.id + '\')">编辑</button>' +
+          '<button type="button" class="note-card__btn note-card__btn--del" onclick="deleteReviewNote(\'' + n.id + '\')">删除</button>' +
+          '</div>' +
+          '</div>' +
+          '</article>';
+      }).join('');
+    }
+    function toggleNoteBody(id) {
+      const el = document.getElementById('note-body-' + id);
+      if (!el) return;
+      el.hidden = !el.hidden;
+      const card = el.closest('.note-card');
+      if (card) card.classList.toggle('note-card--open', !el.hidden);
+    }
+    window.toggleNoteBody = toggleNoteBody;
+    window.__notesReload = renderReviewNotes;
+    document.getElementById('panelDiary') && renderReviewNotes();
+
+    (function () {
+      const d = document.getElementById('tradeDate');
+      if (d) d.valueAsDate = new Date();
+    })();
+    CJ.init().then(() => {}).catch(console.error);
+  </script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js?v=3').then(reg => {
+      console.log('SW registered:', reg.scope);
+    }).catch(err => console.log('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
