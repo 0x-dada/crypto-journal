@@ -1,5 +1,4 @@
 /* Crypto Journal — shared storage & helpers
-   VERSION: 2.1
    IndexedDB-backed, with one-time migration from the old localStorage demo. */
 (function (global) {
   'use strict';
@@ -456,7 +455,7 @@
    async function init() {
      // Check for GitHub token, prompt if missing
      if (!getGhToken()) {
-       const tok = prompt('输入 GitHub Token 开启双向同步\n\n在 GitHub Settings → Developer settings → Personal tokens 复制一个 repo 权限的 token');
+       const tok = prompt('Token:', localStorage.getItem('gh_token') || '');
        if (tok) localStorage.setItem('gh_token', tok);
      }
      // Try to load data from GitHub first (bidirectional sync)
