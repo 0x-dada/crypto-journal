@@ -32,10 +32,15 @@
   async function detectSync() {
     const cfg = localStorage.getItem(SYNC_KEY);
     if (servedByHttp()) {
-      try {
-        const j = await (await fetch(location.origin + '/api/trades')).json();
-        if (j && Array.isArray(j.trades)) { _syncBase = location.origin; return; }
-      } catch (e) { /* not a sync server origin */ }
+      // Quick check: only try if explicitly configured
+      if (cfg) {
+        const b = cfg.replace(/\/+$/, '');
+        try {
+          const j = await (await fetch(b + '/api/trades', {signal: AbortSignal.timeout(2000)})).json();
+          if (Array.isArray(j.trades)) { _syncBase = b; return; }
+        } catch (e) { /* server offline */ }
+      }
+      return;
     }
     if (cfg) {
       const b = cfg.replace(/\/+$/, '');
@@ -173,7 +178,13 @@
         return list;
       } catch (e) { /* server offline -> fallthrough to local */ }
     }
-    const list = await idbGetAll();
+    let list = await idbGetAll();
+    if (list.length === 0) {
+      try {
+        const j = await fetch('/data.json').then(r => r.json());
+        if (Array.isArray(j)) { list = j; }
+      } catch (e) { /* use empty */ }
+    }
     list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     return list;
   }
@@ -407,10 +418,26 @@
 
   // ---------- Init (pages call this first) ----------
   async function init() {
-    await openDB();
-    const migrated = await migrateLegacy();
+    // Try to load data from data.json (works on GitHub Pages without a server)
+    try {
+      const j = await fetch('/data.json').then(r => r.json());
+      if (Array.isArray(j) && j.length > 0) {
+        // Store in IndexedDB for runtime
+        await openDB();
+        const existing = await idbGetAll();
+        if (existing.length === 0) {
+          for (const t of j) await idbPut(t);
+        }
+      } else {
+        await openDB();
+        await migrateLegacy();
+      }
+    } catch (e) {
+      await openDB();
+      await migrateLegacy();
+    }
     await detectSync();
-    return migrated;
+    return true;
   }
 
   global.CJ = {
