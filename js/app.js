@@ -3,52 +3,58 @@
 (function (global) {
   'use strict';
 
-   const DB_NAME = 'cryptoJournal';
-   const DB_VER = 2;
-   const STORE = 'trades';
-   const NOTES_STORE = 'notes';
+  const DB_NAME = 'cryptoJournal';
+  const DB_VER = 2;
+  const STORE = 'trades';
+  const NOTES_STORE = 'notes';
 
-    // ---------- GitHub API sync ----------
-    const GH_REPO = '0x-dada/crypto-journal';
-    const GH_DATA_URL = 'https://api.github.com/repos/' + GH_REPO + '/contents/data.json';
-    const GH_NOTES_URL = 'https://api.github.com/repos/' + GH_REPO + '/contents/notes.json';
+   let _dbPromise = null;
 
-    function getGhToken() { return localStorage.getItem('gh_token'); }
+   // ---------- GitHub API sync ----------
+   const GH_REPO = '0x-dada/crypto-journal';
+   const GH_DATA_URL = 'https://api.github.com/repos/' + GH_REPO + '/contents/data.json';
+   const GH_NOTES_URL = 'https://api.github.com/repos/' + GH_REPO + '/contents/notes.json';
 
-    async function ghFetch(url) {
-      const tok = getGhToken();
-      const r = await fetch(url, { headers: { 'Authorization': 'token ' + tok, 'Accept': 'application/vnd.github.v3+json' } });
-      if (!r.ok) throw new Error('GH ' + r.status);
-      return r.json();
-    }
+   function getGhToken() { return localStorage.getItem('gh_token'); }
 
-    async function ghPush(url, content) {
-      const tok = getGhToken();
-      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2))));
-      const r = await fetch(url, {
-        method: 'PUT',
-        headers: { 'Authorization': 'token ' + tok, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
-        body: JSON.stringify({ message: 'sync via crypto-journal', content: b64 })
-      });
-      if (!r.ok) throw new Error('GH push ' + r.status);
-      return r.json();
-    }
+   async function ghFetch(url) {
+     const tok = getGhToken();
+     const r = await fetch(url, { headers: { 'Authorization': 'token ' + tok, 'Accept': 'application/vnd.github.v3+json' } });
+     if (!r.ok) throw new Error('GH ' + r.status);
+     return r.json();
+   }
 
-    async function fetchGitHubData() {
-      if (!getGhToken()) return null;
-      try { const j = await ghFetch(GH_DATA_URL); const d = JSON.parse(atob(j.content)); if (Array.isArray(d) && d.length > 0) return d; } catch(e) {}
-      return null;
-    }
+   async function ghPush(url, content) {
+     const tok = getGhToken();
+     const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2))));
+     const r = await fetch(url, {
+       method: 'PUT',
+       headers: { 'Authorization': 'token ' + tok, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+       body: JSON.stringify({ message: 'sync via crypto-journal', content: b64 })
+     });
+     if (!r.ok) throw new Error('GH push ' + r.status);
+     return r.json();
+   }
 
-    async function pushToGitHub() {
-      const local = await idbGetAll();
-      await ghPush(GH_DATA_URL, local);
-    }
+   async function fetchGitHubData() {
+     if (!getGhToken()) return null;
+     try { const j = await ghFetch(GH_DATA_URL); const d = JSON.parse(atob(j.content)); if (Array.isArray(d) && d.length > 0) return d; } catch(e) {}
+     return null;
+   }
 
-    async function pushNotesToGitHub() {
-      const notes = await idbNoteGetAll();
-      await ghPush(GH_NOTES_URL, notes);
-    }
+   async function pushToGitHub() {
+     const local = await idbGetAll();
+     await ghPush(GH_DATA_URL, local);
+   }
+
+   async function pushNotesToGitHub() {
+     const notes = await idbNoteGetAll();
+     await ghPush(GH_NOTES_URL, notes);
+   }
+
+   // ---------- Sync (shared server data source) ----------
+   const SYNC_KEY = 'cj_sync_cfg';
+   let _syncBase = null;
 
   function servedByHttp() {
     return /^https?:$/.test(location.protocol);
@@ -68,15 +74,10 @@
   async function detectSync() {
     const cfg = localStorage.getItem(SYNC_KEY);
     if (servedByHttp()) {
-      // Quick check: only try if explicitly configured
-      if (cfg) {
-        const b = cfg.replace(/\/+$/, '');
-        try {
-          const j = await (await fetch(b + '/api/trades', {signal: AbortSignal.timeout(2000)})).json();
-          if (Array.isArray(j.trades)) { _syncBase = b; return; }
-        } catch (e) { /* server offline */ }
-      }
-      return;
+      try {
+        const j = await (await fetch(location.origin + '/api/trades')).json();
+        if (j && Array.isArray(j.trades)) { _syncBase = location.origin; return; }
+      } catch (e) { /* not a sync server origin */ }
     }
     if (cfg) {
       const b = cfg.replace(/\/+$/, '');
@@ -214,17 +215,11 @@
          return list;
        } catch (e) { /* server offline -> fallthrough to local */ }
      }
-     let list = await idbGetAll();
+     const list = await idbGetAll();
      if (list.length === 0) {
        const ghData = await fetchGitHubData();
-       if (ghData && ghData.length > 0) {
-         list = ghData;
-       } else {
-         try {
-           const j = await fetch('/data.json').then(r => r.json());
-           if (Array.isArray(j)) { list = j; }
-         } catch (e) { /* use empty */ }
-       }
+       if (ghData && ghData.length > 0) { list = ghData; }
+       else { try { const j = await fetch('/data.json').then(r => r.json()); if (Array.isArray(j)) { list = j; } } catch (e) { /* use empty */ } }
      }
      list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
      return list;
@@ -233,18 +228,18 @@
    async function saveTrade(trade) {
      if (!trade.id) trade.id = (trade.createdAt || new Date().toISOString());
      await idbPut(trade);
-     try { await pushToGitHub(); } catch (e) { /* push failed, data safe in IndexedDB */ }
+     try { await pushToGitHub(); } catch (e) {}
      return trade;
    }
 
    async function deleteTrade(id) {
      await idbDelete(id);
-     try { await pushToGitHub(); } catch (e) { /* push failed */ }
+     try { await pushToGitHub(); } catch (e) {}
    }
 
    async function wipeAll() {
      await idbClear();
-     try { await pushToGitHub(); } catch (e) { /* push failed */ }
+     try { await pushToGitHub(); } catch (e) {}
    }
 
   // ---------- Notes CRUD ----------
@@ -276,13 +271,7 @@
      }
      const list = await idbNoteGetAll();
      if (list.length === 0) {
-       try {
-         const gh = await ghFetch(GH_NOTES_URL);
-         if (gh && gh.content) {
-           const parsed = JSON.parse(atob(gh.content));
-           if (Array.isArray(parsed)) return parsed;
-         }
-       } catch (e) { /* use local */ }
+       try { const gh = await ghFetch(GH_NOTES_URL); if (gh && gh.content) { const parsed = JSON.parse(atob(gh.content)); if (Array.isArray(parsed)) return parsed; } } catch (e) {}
      }
      list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
      return list;
@@ -291,13 +280,13 @@
    async function saveNote(note) {
      if (!note.id) note.id = (note.createdAt || new Date().toISOString());
      await idbNotePut(note);
-     try { await pushNotesToGitHub(); } catch (e) { /* push failed */ }
+     try { await pushNotesToGitHub(); } catch (e) {}
      return note;
    }
 
    async function deleteNote(id) {
      await idbNoteDelete(id);
-     try { await pushNotesToGitHub(); } catch (e) { /* push failed */ }
+     try { await pushNotesToGitHub(); } catch (e) {}
    }
 
   // ---------- PnL ----------
@@ -323,7 +312,7 @@
 
   // ---------- Labels / formatting ----------
   const TF_MAP = { scalp: 'Scalp', intraday: '日内', swing: '波段', position: '中长线' };
-  const RESULT_MAP = { win: '盈利', loss: '亏损', breakeven: '持平', open: '持仓' };
+  const RESULT_MAP = { win: '盈利', loss: '亏损', breakeven: '持平', open: '持仓中' };
   const EMOJI_MAP = { '1': '😰', '2': '😟', '3': '😐', '4': '🙂', '5': '😌' };
 
   function fmtNum(v, dp) {
@@ -455,56 +444,24 @@
    async function init() {
      // Check for GitHub token, prompt if missing
      if (!getGhToken()) {
-       const tok = prompt('输入 GitHub Token 开启双向同步\n\n在 GitHub Settings → Developer settings → Personal tokens 复制一个 repo 权限的 token');
+       const tok = prompt('粘贴 GitHub Token（Settings > Developer > Personal tokens）:', '');
        if (tok) localStorage.setItem('gh_token', tok);
      }
-     // Try to load data from GitHub first (bidirectional sync)
-     try {
-       const ghData = await fetchGitHubData();
-       if (ghData && ghData.length > 0) {
-         await openDB();
-         const existing = await idbGetAll();
-         if (existing.length === 0) {
-           for (const t of ghData) await idbPut(t);
-         }
-       } else {
-         // Fallback to local data.json
-         try {
-           const j = await fetch('/data.json').then(r => r.json());
-           if (Array.isArray(j) && j.length > 0) {
-             await openDB();
-             const existing = await idbGetAll();
-             if (existing.length === 0) {
-               for (const t of j) await idbPut(t);
-             }
-           } else {
-             await openDB();
-             await migrateLegacy();
-           }
-         } catch (e) {
-           await openDB();
-           await migrateLegacy();
-         }
-       }
-     } catch (e) {
-       // GitHub unreachable, try local data.json
+     await openDB();
+     await migrateLegacy();
+     // Try to fetch from GitHub
+     if (getGhToken()) {
        try {
-         const j = await fetch('/data.json').then(r => r.json());
-         if (Array.isArray(j) && j.length > 0) {
-           await openDB();
+         const ghData = await fetchGitHubData();
+         if (ghData && ghData.length > 0) {
            const existing = await idbGetAll();
            if (existing.length === 0) {
-             for (const t of j) await idbPut(t);
+             for (const t of ghData) await idbPut(t);
            }
-         } else {
-           await openDB();
-           await migrateLegacy();
          }
-       } catch (e2) {
-         await openDB();
-         await migrateLegacy();
-       }
+       } catch (e) { /* GitHub unreachable, use local */ }
      }
+     await detectSync();
      return true;
    }
 
