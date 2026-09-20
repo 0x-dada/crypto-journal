@@ -1,4 +1,5 @@
 /* Crypto Journal — shared storage & helpers
+   VERSION: 2.1
    IndexedDB-backed, with one-time migration from the old localStorage demo. */
 (function (global) {
   'use strict';
