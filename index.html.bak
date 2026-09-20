@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>记录 | Crypto Journal</title>
+  <meta name="description" content="记录每一笔加密货币交易，保持纪律。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="nav">
+    <div class="nav__inner">
+      <a class="brand" href="index.html">
+        <div class="brand__mark"><img src="favicon.svg" alt=""></div>
+        <span>DADA TRADING</span>
+      </a>
+      <nav class="nav__links">
+        <a href="index.html" class="active">记录</a>
+        <a href="history.html">历史</a>
+        <a href="stats.html">统计</a>
+      </nav>
+      <div class="nav__actions">
+        <a class="btn btn--ghost" href="history.html#export" id="navExport">导出数据</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="pagehead section--dark hero">
+      <div class="wrap wrap--narrow">
+        <p class="eyebrow">Trading Journal</p>
+        <h1 class="display">记录</h1>
+        <p class="lede">保持纪律，每一次进场都写清楚，复盘才有价值</p>
+      </div>
+      <button class="player-btn" id="audioToggle" type="button" aria-label="播放暂停冥想音乐" aria-pressed="false">
+        <svg class="ic-play" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="ic-pause" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
+      <audio id="meditationAudio" src="audio/交易冥想练习-叁生资管-达达.mp3" loop preload="metadata"></audio>
+    </section>
+
+    <section class="section">
+      <div class="wrap wrap--narrow">
+
+        <div class="success" id="successState">
+          <div class="success-icon">✓</div>
+          <h2>已记录</h2>
+          <p>这笔交易已保存到你的日记。继续保持纪律。</p>
+          <br>
+          <button class="btn btn--primary" style="max-width: 220px; margin: 0 auto;" onclick="location.reload()">再记一笔</button>
+          <br>
+          <a class="btn btn--ghost" style="width:auto" href="history.html">查看历史记录</a>
+        </div>
+
+        <form class="form" id="tradeForm" onsubmit="handleSubmit(event)">
+
+          <!-- 1. 日期与周期 -->
+          <div class="form__step">
+            <h2 class="form__label"><span>1</span> 交易日期与周期</h2>
+            <p class="form__hint">记录这笔交易发生的日期，以及你使用的时间框架。</p>
+            <div class="input-row">
+              <div>
+                <div class="field-label">交易日期</div>
+                <input type="date" id="tradeDate" required>
+              </div>
+              <div>
+                <div class="field-label">时间框架</div>
+                <select id="timeframe" required>
+                  <option value="">选择周期</option>
+                  <option value="scalp">Scalp（超短）</option>
+                  <option value="intraday">日内</option>
+                  <option value="swing">波段</option>
+                  <option value="position">中长线</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 现货 / 合约 -->
+          <div class="form__step">
+            <h2 class="form__label"><span>2</span> 现货还是合约</h2>
+            <p class="form__hint">现货没有杠杆风险，合约需要额外关注强平价格和保证金。</p>
+            <div class="choices">
+              <label class="choice">
+                <input type="radio" name="marketType" value="spot" checked onchange="toggleFutures()">
+                <div>
+                  <strong>现货 Spot</strong>
+                  <em>无杠杆，持有现货</em>
+                </div>
+              </label>
+              <label class="choice">
+                <input type="radio" name="marketType" value="futures" onchange="toggleFutures()">
+                <div>
+                  <strong>合约 Futures</strong>
+                  <em>有杠杆，注意强平</em>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 3. 交易对与方向 -->
+          <div class="form__step">
+            <h2 class="form__label"><span>3</span> 交易对与方向</h2>
+            <p class="form__hint">你交易的是哪个币种？做多还是做空？</p>
+            <div style="margin-bottom: 16px;">
+              <div class="field-label">交易对</div>
+              <input type="text" id="pair" placeholder="例如 BTC/USDT、ETH/USDT、SOL/USDT" required>
+            </div>
+            <div class="pills">
+              <label class="pill">
+                <input type="radio" name="direction" value="long" required onchange="calcLiq()">
+                <span>做多 Long</span>
+              </label>
+              <label class="pill">
+                <input type="radio" name="direction" value="short" onchange="calcLiq()">
+                <span>做空 Short</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 4. 进场理由 -->
+          <div class="form__step">
+            <h2 class="form__label"><span>4</span> 进场理由</h2>
+            <p class="form__hint">写下你为什么要进这笔单。理由越充分、越具体，胜率通常越高。</p>
+
+            <div class="reasons-list" id="reasonsList">
+              <div class="reason-item">
+                <span class="num-badge">1</span>
+                <input type="text" name="reason" placeholder="例如：日线突破关键阻力 + 成交量放大" maxlength="120">
+              </div>
+              <div class="reason-item">
+                <span class="num-badge">2</span>
+                <input type="text" name="reason" placeholder="例如：RSI 超卖后出现看涨背离" maxlength="120">
+              </div>
+
+              <div class="reasons-extra" id="reasonsExtra">
+                <div class="reason-item">
+                  <span class="num-badge">3</span>
+                  <input type="text" name="reason" placeholder="例如：支撑位多次测试后守住" maxlength="120">
+                </div>
+                <div class="reason-item">
+                  <span class="num-badge">4</span>
+                  <input type="text" name="reason" placeholder="例如：与大盘 / BTC 走势背离" maxlength="120">
+                </div>
+                <div class="reason-item">
+                  <span class="num-badge">5</span>
+                  <input type="text" name="reason" placeholder="例如：资金费率极端，反向博弈" maxlength="120">
+                </div>
+                <div class="reason-item">
+                  <span class="num-badge">6</span>
+                  <input type="text" name="reason" placeholder="例如：重要新闻 / 事件驱动" maxlength="120">
+                </div>
+                <div class="reason-item">
+                  <span class="num-badge">7</span>
+                  <input type="text" name="reason" placeholder="例如：形态确认（头肩、旗形等）" maxlength="120">
+                </div>
+                <div class="reason-item">
+                  <span class="num-badge">8</span>
+                  <input type="text" name="reason" placeholder="例如：多周期共振" maxlength="120">
+                </div>
+                <div class="reason-item">
+                  <span class="num-badge">9</span>
+                  <input type="text" name="reason" placeholder="例如：风险回报比 ≥ 1:2" maxlength="120">
+                </div>
+                <div class="reason-item">
+                  <span class="num-badge">10</span>
+                  <input type="text" name="reason" placeholder="例如：符合自己的交易系统信号" maxlength="120">
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="reasons-toggle" id="reasonsToggle" onclick="toggleReasons()">
+              <span class="arrow">▼</span>
+              <span id="reasonsToggleText">展开更多理由（最多 10 条）</span>
+            </button>
+
+            <div class="reasons-hint">
+              提示：能写出 3 条以上清晰、可验证的理由，通常比只凭感觉进场的胜率更高。空着的理由不会被保存。
+            </div>
+          </div>
+
+          <!-- 5. 进场与出场 -->
+          <div class="form__step">
+            <h2 class="form__label"><span>5</span> 进场与出场</h2>
+            <p class="form__hint">记录你的进场价、止损和目标价位。越清晰越好复盘。</p>
+            <div class="input-row" style="margin-bottom: 12px;">
+              <div>
+                <div class="field-label">进场价格</div>
+                <input type="number" id="entryPrice" step="any" placeholder="0.00" required oninput="calcLiq()">
+              </div>
+              <div>
+                <div class="field-label">止损价格</div>
+                <input type="number" id="stopLoss" step="any" placeholder="0.00">
+              </div>
+            </div>
+            <div class="input-row">
+              <div>
+                <div class="field-label">目标价格</div>
+                <input type="number" id="takeProfit" step="any" placeholder="0.00">
+              </div>
+              <div>
+                <div class="field-label">出场价格（已平仓）</div>
+                <input type="number" id="exitPrice" step="any" placeholder="可选">
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. 仓位与本金 -->
+          <div class="form__step">
+            <h2 class="form__label"><span>6</span> 仓位与本金</h2>
+            <p class="form__hint">记录你的总本金和这次使用的仓位比例。纪律的核心是风险控制。</p>
+            <div class="input-row" style="margin-bottom: 12px;">
+              <div>
+                <div class="field-label">当前本金 (USDT)</div>
+                <input type="number" id="capital" step="any" placeholder="例如 10000" required>
+              </div>
+              <div>
+                <div class="field-label">仓位比例 (%)</div>
+                <input type="number" id="positionSize" step="0.1" min="0" max="100" placeholder="例如 2" required>
+              </div>
+            </div>
+            <div>
+              <div class="field-label">实际投入金额 / 保证金 (USDT)</div>
+              <input type="number" id="marginAmount" step="any" placeholder="可选，可自动估算" oninput="calcLiq()">
+            </div>
+          </div>
+
+          <!-- 7. 合约专属：杠杆 + 强平计算器 -->
+          <div class="form__step" id="futuresStep" style="display: none;">
+            <h2 class="form__label"><span>7</span> 杠杆与强平计算</h2>
+            <p class="form__hint">合约交易必须知道自己的强平价。选择杠杆后自动估算（近似值）。</p>
+
+            <div class="field-label">杠杆倍数</div>
+            <div class="leverage-pills">
+              <label class="pill"><input type="radio" name="leverage" value="2" onchange="calcLiq()"><span>2x</span></label>
+              <label class="pill"><input type="radio" name="leverage" value="3" onchange="calcLiq()"><span>3x</span></label>
+              <label class="pill"><input type="radio" name="leverage" value="5" onchange="calcLiq()"><span>5x</span></label>
+              <label class="pill"><input type="radio" name="leverage" value="10" onchange="calcLiq()" checked><span>10x</span></label>
+              <label class="pill"><input type="radio" name="leverage" value="20" onchange="calcLiq()"><span>20x</span></label>
+              <label class="pill"><input type="radio" name="leverage" value="50" onchange="calcLiq()"><span>50x</span></label>
+              <label class="pill"><input type="radio" name="leverage" value="100" onchange="calcLiq()"><span>100x</span></label>
+            </div>
+
+            <div style="margin-top: 14px;">
+              <div class="field-label">自定义杠杆（覆盖上方选择）</div>
+              <input type="number" id="customLeverage" step="0.1" min="1" max="125" placeholder="例如 7.5" oninput="calcLiq()">
+            </div>
+
+            <div style="margin-top: 14px;">
+              <div class="field-label">维持保证金率 MMR（默认 0.5%）</div>
+              <input type="number" id="mmr" step="0.01" value="0.5" placeholder="0.5" oninput="calcLiq()">
+            </div>
+
+            <div class="liq-box">
+              <h4>强平价格估算（近似值）</h4>
+              <div class="liq-grid">
+                <div class="liq-item">
+                  <div class="label">预估强平价</div>
+                  <div class="value danger" id="liqPrice">—</div>
+                </div>
+                <div class="liq-item">
+                  <div class="label">距强平距离</div>
+                  <div class="value" id="liqDistance">—</div>
+                </div>
+              </div>
+              <p class="liq-note">
+                * 仅供参考。实际强平价受交易所费率、资金费率、仓位模式影响，请以交易所为准。
+              </p>
+            </div>
+          </div>
+
+          <!-- 8. 是否符合纪律 -->
+          <div class="form__step">
+            <h2 class="form__label"><span id="stepDiscipline">8</span> 是否符合交易纪律</h2>
+            <p class="form__hint">这是最重要的一步。诚实地评估这次交易是否遵守了你的规则。</p>
+            <div class="choices">
+              <label class="choice">
+                <input type="radio" name="discipline" value="yes" required>
+                <div>
+                  <strong>符合纪律</strong>
+                  <em>遵守了计划与规则</em>
+                </div>
+              </label>
+              <label class="choice">
+                <input type="radio" name="discipline" value="no">
+                <div>
+                  <strong>违反纪律</strong>
+                  <em>冲动或偏离计划</em>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 9. 情绪评分 -->
+          <div class="form__step">
+            <h2 class="form__label"><span id="stepEmotion">9</span> 情绪评分</h2>
+            <p class="form__hint">交易时的情绪状态往往比技术更重要。1 = 极度焦虑/贪婪，5 = 平静理性。</p>
+            <div class="emotion-scale">
+              <label class="emotion-item">
+                <input type="radio" name="emotion" value="1">
+                <div class="score-box"><span class="emoji">😰</span><span class="num">1</span></div>
+              </label>
+              <label class="emotion-item">
+                <input type="radio" name="emotion" value="2">
+                <div class="score-box"><span class="emoji">😟</span><span class="num">2</span></div>
+              </label>
+              <label class="emotion-item">
+                <input type="radio" name="emotion" value="3">
+                <div class="score-box"><span class="emoji">😐</span><span class="num">3</span></div>
+              </label>
+              <label class="emotion-item">
+                <input type="radio" name="emotion" value="4">
+                <div class="score-box"><span class="emoji">🙂</span><span class="num">4</span></div>
+              </label>
+              <label class="emotion-item">
+                <input type="radio" name="emotion" value="5">
+                <div class="score-box"><span class="emoji">😌</span><span class="num">5</span></div>
+              </label>
+            </div>
+            <div class="emotion-labels">
+              <span>焦虑 / 贪婪</span>
+              <span>平静理性</span>
+            </div>
+          </div>
+
+          <!-- 10. 结果与复盘 -->
+          <div class="form__step">
+            <h2 class="form__label"><span id="stepResult">10</span> 结果与复盘</h2>
+            <p class="form__hint">这笔交易的结果是什么？有什么值得记录的？</p>
+            <div class="pills" style="margin-bottom: 16px;">
+              <label class="pill"><input type="radio" name="result" value="win"><span>盈利</span></label>
+              <label class="pill"><input type="radio" name="result" value="loss"><span>亏损</span></label>
+              <label class="pill"><input type="radio" name="result" value="breakeven"><span>持平</span></label>
+              <label class="pill"><input type="radio" name="result" value="open"><span>仍持仓</span></label>
+            </div>
+            <div>
+              <div class="field-label">复盘笔记</div>
+              <textarea id="notes" placeholder="情绪如何？执行得怎样？下次可以改进什么？"></textarea>
+            </div>
+          </div>
+
+          <!-- 11. 截图上传 -->
+          <div class="form__step">
+            <h2 class="form__label"><span id="stepScreenshot">11</span> 截图上传</h2>
+            <p class="form__hint">上传K线截图、持仓截图或订单记录，方便日后复盘。</p>
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+              <p>点击或拖拽图片到这里</p>
+              <p class="hint">支持 JPG、PNG、WebP，可多选</p>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+            <div class="preview-grid" id="previewGrid"></div>
+          </div>
+
+          <!-- Summary -->
+          <div class="summary" id="summaryBox">
+            <h3>交易预览</h3>
+            <div class="summary-row">
+              <span>市场类型</span>
+              <span id="sumMarket">现货</span>
+            </div>
+            <div class="summary-row">
+              <span>交易对</span>
+              <span id="sumPair">—</span>
+            </div>
+            <div class="summary-row">
+              <span>方向</span>
+              <span id="sumDirection">—</span>
+            </div>
+            <div class="summary-row">
+              <span>进场理由</span>
+              <span id="sumReasons">0 条</span>
+            </div>
+            <div class="summary-row">
+              <span>进场价</span>
+              <span id="sumEntry">—</span>
+            </div>
+            <div class="summary-row">
+              <span>仓位</span>
+              <span id="sumPosition">—</span>
+            </div>
+            <div class="summary-row" id="sumLevRow" style="display:none;">
+              <span>杠杆 / 强平价</span>
+              <span id="sumLev">—</span>
+            </div>
+            <div class="summary-row">
+              <span>纪律</span>
+              <span id="sumDiscipline">—</span>
+            </div>
+            <div class="summary-row">
+              <span>情绪</span>
+              <span id="sumEmotion">—</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn--primary">保存这笔交易</button>
+          <p class="footer-note">数据保存在本地（浏览器 / Mac 应用），不会上传到服务器。</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    let uploadedImages = [];
+
+    document.getElementById('tradeDate').valueAsDate = new Date();
+
+    // ===== Reasons expand/collapse =====
+    function toggleReasons() {
+      const extra = document.getElementById('reasonsExtra');
+      const btn = document.getElementById('reasonsToggle');
+      const text = document.getElementById('reasonsToggleText');
+      const isOpen = extra.classList.toggle('show');
+      btn.classList.toggle('open', isOpen);
+      text.textContent = isOpen ? '收起额外理由' : '展开更多理由（最多 10 条）';
+    }
+
+    function countReasons() {
+      return [...document.querySelectorAll('input[name="reason"]')].filter(el => el.value.trim()).length;
+    }
+
+    // ===== Toggle Futures =====
+    function toggleFutures() {
+      const isFutures = document.querySelector('input[name="marketType"]:checked').value === 'futures';
+      document.getElementById('futuresStep').style.display = isFutures ? 'block' : 'none';
+
+      const stepBase = isFutures ? 8 : 7;
+      document.getElementById('stepDiscipline').textContent = stepBase;
+      document.getElementById('stepEmotion').textContent = stepBase + 1;
+      document.getElementById('stepResult').textContent = stepBase + 2;
+      document.getElementById('stepScreenshot').textContent = stepBase + 3;
+      document.getElementById('sumLevRow').style.display = isFutures ? 'flex' : 'none';
+      updateSummary();
+      calcLiq();
+    }
+
+    // ===== Liquidation Calculator =====
+    function calcLiq() {
+      const isFutures = document.querySelector('input[name="marketType"]:checked')?.value === 'futures';
+      if (!isFutures) return;
+
+      const entry = parseFloat(document.getElementById('entryPrice').value);
+      const direction = document.querySelector('input[name="direction"]:checked')?.value;
+      let lev = parseFloat(document.getElementById('customLeverage').value);
+      if (!lev) lev = parseFloat(document.querySelector('input[name="leverage"]:checked')?.value);
+      const mmr = parseFloat(document.getElementById('mmr').value) / 100 || 0.005;
+
+      const liqEl = document.getElementById('liqPrice');
+      const distEl = document.getElementById('liqDistance');
+
+      if (!entry || !lev || !direction) {
+        liqEl.textContent = '—';
+        distEl.textContent = '—';
+        return;
+      }
+
+      const liq = direction === 'long'
+        ? entry * (1 - 1 / lev + mmr)
+        : entry * (1 + 1 / lev - mmr);
+
+      liqEl.textContent = liq.toFixed(entry < 1 ? 6 : 2);
+      distEl.textContent = Math.abs((entry - liq) / entry * 100).toFixed(2) + '%';
+      updateSummary();
+    }
+
+    // ===== Screenshot Upload =====
+    const uploadZone = document.getElementById('uploadZone');
+    const previewGrid = document.getElementById('previewGrid');
+
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          uploadedImages.push(e.target.result);
+          renderPreviews();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderPreviews() {
+      previewGrid.innerHTML = '';
+      uploadedImages.forEach((src, i) => {
+        const div = document.createElement('div');
+        div.className = 'preview-item';
+        div.innerHTML = `
+          <img src="${src}" alt="screenshot">
+          <button type="button" class="remove" onclick="removeImage(${i})">×</button>
+        `;
+        previewGrid.appendChild(div);
+      });
+    }
+
+    function removeImage(index) {
+      uploadedImages.splice(index, 1);
+      renderPreviews();
+    }
+
+    // ===== Live Summary =====
+    function updateSummary() {
+      const isFutures = document.querySelector('input[name="marketType"]:checked')?.value === 'futures';
+      document.getElementById('sumMarket').textContent = isFutures ? '合约' : '现货';
+      document.getElementById('sumPair').textContent = document.getElementById('pair').value || '—';
+      document.getElementById('sumEntry').textContent = document.getElementById('entryPrice').value || '—';
+
+      const reasonCount = countReasons();
+      document.getElementById('sumReasons').textContent = reasonCount > 0 ? `${reasonCount} 条` : '0 条';
+
+      const pos = document.getElementById('positionSize').value;
+      const cap = document.getElementById('capital').value;
+      if (pos && cap) {
+        const amount = (parseFloat(cap) * parseFloat(pos) / 100).toFixed(2);
+        document.getElementById('sumPosition').textContent = `${pos}% (≈ ${amount} USDT)`;
+      } else if (pos) {
+        document.getElementById('sumPosition').textContent = `${pos}%`;
+      } else {
+        document.getElementById('sumPosition').textContent = '—';
+      }
+
+      const dir = document.querySelector('input[name="direction"]:checked');
+      document.getElementById('sumDirection').textContent = dir
+        ? (dir.value === 'long' ? '做多 Long' : '做空 Short')
+        : '—';
+
+      if (isFutures) {
+        let lev = parseFloat(document.getElementById('customLeverage').value);
+        if (!lev) lev = parseFloat(document.querySelector('input[name="leverage"]:checked')?.value);
+        const liq = document.getElementById('liqPrice').textContent;
+        document.getElementById('sumLev').textContent = lev ? `${lev}x / ${liq}` : '—';
+      }
+
+      const disc = document.querySelector('input[name="discipline"]:checked');
+      document.getElementById('sumDiscipline').textContent = disc
+        ? (disc.value === 'yes' ? '符合纪律 ✓' : '违反纪律 ✗')
+        : '—';
+
+      const emo = document.querySelector('input[name="emotion"]:checked');
+      const emoMap = { '1': '😰 1', '2': '😟 2', '3': '😐 3', '4': '🙂 4', '5': '😌 5' };
+      document.getElementById('sumEmotion').textContent = emo ? emoMap[emo.value] : '—';
+    }
+
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+      el.addEventListener('input', () => { updateSummary(); calcLiq(); });
+      el.addEventListener('change', () => { updateSummary(); calcLiq(); });
+    });
+
+    // ===== Submit =====
+    async function handleSubmit(e) {
+      e.preventDefault();
+
+      const isFutures = document.querySelector('input[name="marketType"]:checked').value === 'futures';
+      let lev = parseFloat(document.getElementById('customLeverage').value);
+      if (!lev) lev = parseFloat(document.querySelector('input[name="leverage"]:checked')?.value || null);
+
+      const reasons = [];
+      document.querySelectorAll('input[name="reason"]').forEach(el => {
+        const v = el.value.trim();
+        if (v) reasons.push(v);
+      });
+
+      const trade = {
+        id: new Date().toISOString() + '-' + (Math.random() * 1e6 | 0),
+        date: document.getElementById('tradeDate').value,
+        timeframe: document.getElementById('timeframe').value,
+        marketType: document.querySelector('input[name="marketType"]:checked').value,
+        pair: document.getElementById('pair').value,
+        direction: document.querySelector('input[name="direction"]:checked')?.value,
+        reasons: reasons,
+        entryPrice: document.getElementById('entryPrice').value || '',
+        stopLoss: document.getElementById('stopLoss').value || '',
+        takeProfit: document.getElementById('takeProfit').value || '',
+        exitPrice: document.getElementById('exitPrice').value || '',
+        capital: document.getElementById('capital').value || '',
+        positionSize: document.getElementById('positionSize').value || '',
+        marginAmount: document.getElementById('marginAmount').value || '',
+        leverage: isFutures ? (lev || null) : null,
+        mmr: isFutures ? document.getElementById('mmr').value : null,
+        liqPrice: isFutures ? document.getElementById('liqPrice').textContent : null,
+        discipline: document.querySelector('input[name="discipline"]:checked')?.value,
+        emotion: document.querySelector('input[name="emotion"]:checked')?.value,
+        result: document.querySelector('input[name="result"]:checked')?.value,
+        notes: document.getElementById('notes').value,
+        screenshots: uploadedImages,
+        createdAt: new Date().toISOString()
+      };
+
+      await CJ.saveTrade(trade);
+
+      document.getElementById('tradeForm').classList.add('hidden');
+      document.getElementById('successState').classList.add('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    CJ.init().then(() => { toggleFutures(); }).catch(console.error);
+
+    (function () {
+      const btn = document.getElementById('audioToggle');
+      const audio = document.getElementById('meditationAudio');
+      if (!btn || !audio) return;
+      function setPlaying(on) {
+        btn.classList.toggle('playing', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+      btn.addEventListener('click', () => {
+        if (audio.paused) {
+          audio.play().then(() => setPlaying(true)).catch(() => {});
+        } else {
+          audio.pause();
+          setPlaying(false);
+        }
+      });
+      audio.addEventListener('play', () => setPlaying(true));
+      audio.addEventListener('pause', () => setPlaying(false));
+    })();
+  </script>
+</body>
+</html>
