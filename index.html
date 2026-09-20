@@ -493,6 +493,17 @@
   <script src="js/app.js?v=5888"></script>
   <script src="js/history.js?v=5888"></script>
   <script src="js/stats.js?v=5888"></script>
+  <div id="token-banner" style="display:none;background:#1a1a1a;color:#fff;text-align:center;padding:12px;margin:0;position:fixed;top:0;left:0;right:0;z-index:9999;font-size:14px;font-family:sans-serif;">
+    <input id="token-input" type="text" placeholder="粘贴 GitHub Token" style="width:70%;padding:8px;margin:6px 0;border-radius:6px;border:none;font-size:14px;"/>
+    <button onclick="saveToken()" style="padding:8px 16px;border-radius:6px;border:none;background:#333;color:#fff;cursor:pointer;font-size:14px;">保存</button>
+  </div>
+  <script>
+  function saveToken() {
+    var t = document.getElementById('token-input').value.trim();
+    if (t) { localStorage.setItem('gh_token', t); document.getElementById('token-banner').style.display='none'; location.reload(); }
+  }
+  if (!localStorage.getItem('gh_token')) { document.getElementById('token-banner').style.display='block'; }
+  </script>
   <script>
     /* Router */
     function switchView(v) {
