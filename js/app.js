@@ -24,13 +24,13 @@
      return r.json();
    }
 
-   async function ghPush(url, content) {
+   async function ghPush(url, content, b64) {
      const tok = getGhToken();
-     const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2))));
+     const encoded = b64 || btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2))));
      const r = await fetch(url, {
        method: 'PUT',
        headers: { 'Authorization': 'token ' + tok, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
-       body: JSON.stringify({ message: 'sync via crypto-journal', content: b64 })
+       body: JSON.stringify({ message: 'sync via crypto-journal', content: encoded })
      });
      if (!r.ok) throw new Error('GH push ' + r.status);
      return r.json();
@@ -38,7 +38,12 @@
 
    async function fetchGitHubData() {
      if (!getGhToken()) return null;
-     try { const j = await ghFetch(GH_DATA_URL); const d = JSON.parse(atob(j.content)); if (Array.isArray(d) && d.length > 0) return d; } catch(e) {}
+     try {
+       const j = await ghFetch(GH_DATA_URL);
+       const decoded = new TextDecoder().decode(Uint8Array.from(atob(j.content), c => c.charCodeAt(0)));
+       const d = JSON.parse(decoded);
+       if (Array.isArray(d) && d.length > 0) return d;
+     } catch (e) {}
      return null;
    }
 
@@ -271,7 +276,14 @@
      }
      const list = await idbNoteGetAll();
      if (list.length === 0) {
-       try { const gh = await ghFetch(GH_NOTES_URL); if (gh && gh.content) { const parsed = JSON.parse(atob(gh.content)); if (Array.isArray(parsed)) return parsed; } } catch (e) {}
+       try {
+         const gh = await ghFetch(GH_NOTES_URL);
+         if (gh && gh.content) {
+           const decoded = new TextDecoder().decode(Uint8Array.from(atob(gh.content), c => c.charCodeAt(0)));
+           const parsed = JSON.parse(decoded);
+           if (Array.isArray(parsed)) return parsed;
+         }
+       } catch (e) {}
      }
      list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
      return list;
