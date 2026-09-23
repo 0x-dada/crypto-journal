@@ -18,8 +18,37 @@
     .feed-date { font-weight: 600; font-size: 14px; color: #14140f; }
     .feed-title { font-size: 14px; color: #555; flex: 1; }
     .feed-viewed { font-size: 12px; color: #999; }
-    .feed-detail { padding: 12px 0; }
-    .feed-detail iframe { border: 1px solid #eee; border-radius: 8px; }
+    .feed-detail { padding: 0; overflow: hidden; }
+    .feed-detail .report-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 20px; margin-bottom: 12px; }
+    .feed-detail .report-card__title { font-size: 20px; font-weight: 700; color: #14140f; margin-bottom: 4px; }
+    .feed-detail .report-card__sub { font-size: 13px; color: #999; margin-bottom: 16px; }
+    .feed-detail .report-section { margin-bottom: 16px; }
+    .feed-detail .report-section h3 { font-size: 16px; font-weight: 700; color: #14140f; border-left: 3px solid #b33a2b; padding-left: 8px; margin-bottom: 8px; }
+    .feed-detail .report-section h4 { font-size: 14px; font-weight: 600; color: #333; margin: 8px 0 4px; }
+    .feed-detail .report-section p { font-size: 13px; color: #444; line-height: 1.6; margin: 4px 0; }
+    .feed-detail .report-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+    .feed-detail .report-table th { background: #14140f; color: #fff; padding: 6px 10px; text-align: left; font-weight: 500; }
+    .feed-detail .report-table td { padding: 6px 10px; border-bottom: 1px solid #eee; color: #333; }
+    .feed-detail .report-table tr:nth-child(even) { background: #f9f9f9; }
+    .feed-detail .report-table tr:hover { background: #f0f0f0; }
+    .feed-detail .report-table .highlight { background: #fff3e0; font-weight: 600; color: #b33a2b; }
+    .feed-detail .report-table .ok { color: #4c8468; font-weight: 600; }
+    .feed-detail .report-table .warn { color: #b33a2b; }
+    .feed-detail .report-table .neutral { color: #666; }
+    .feed-detail .report-table td:first-child { font-weight: 600; color: #14140f; }
+    .feed-detail .report-table td:first-child .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .feed-detail .report-table .tag-ok { background: #e8f5e9; color: #4c8468; }
+    .feed-detail .report-table .tag-warn { background: #fff3e0; color: #b33a2b; }
+    .feed-detail .report-table .tag-neutral { background: #f5f5f5; color: #666; }
+    .feed-detail .report-table .tag-fail { background: #ffebee; color: #b33a2b; }
+    .feed-detail .report-bullet { font-size: 13px; color: #444; line-height: 1.8; padding-left: 4px; }
+    .feed-detail .report-bullet li { margin-bottom: 2px; }
+    .feed-detail .report-rule { border: none; border-top: 1px dashed #ddd; margin: 12px 0; }
+    .feed-detail .report-quote { border-left: 3px solid #b33a2b; padding-left: 12px; font-size: 13px; color: #666; font-style: italic; margin: 8px 0; }
+    .feed-detail .report-conclusion { background: linear-gradient(135deg, #14140f 0%, #1a1a12 100%); color: #fff; border-radius: 12px; padding: 16px 20px; margin-top: 12px; }
+    .feed-detail .report-conclusion h3 { color: #fff; border-left-color: #f0c040; }
+    .feed-detail .report-conclusion p { color: #ddd; }
+    .feed-detail .report-footer { font-size: 11px; color: #aaa; margin-top: 12px; text-align: center; }
    </style>
 </head>
 <body>
@@ -926,12 +955,142 @@
       }).catch(e => { list.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>加载失败</h3></div>'; });
     }
 
+    function renderMarkdown(md) {
+      var html = '';
+      var lines = md.split('\n');
+      var i = 0;
+      while (i < lines.length) {
+        var line = lines[i];
+        // H1
+        if (line.match(/^#\s/)) {
+          html += '<div class="report-card"><div class="report-card__title">' + line.replace(/^#\s/, '') + '</div>';
+          i++; continue;
+        }
+        // Subtitle line (**...**)
+        if (line.match(/^\*\*报告日期/) || line.match(/^\*\*数据来源/)) {
+          html += '<div class="report-card__sub">' + line.replace(/\*\*/g, '') + '</div>';
+          i++; continue;
+        }
+        // Horizontal rule
+        if (line.trim() === '---') {
+          html += '<hr class="report-rule">';
+          i++; continue;
+        }
+        // Empty line
+        if (line.trim() === '') { i++; continue; }
+        // H2
+        if (line.match(/^##\s/)) {
+          html += '<div class="report-section"><h3>' + line.replace(/^##\s/, '') + '</h3>';
+          i++; continue;
+        }
+        // H3
+        if (line.match(/^###\s/)) {
+          html += '<h4>' + line.replace(/^###\s/, '') + '</h4>';
+          i++; continue;
+        }
+        // Table
+        if (line.match(/^\|/)) {
+          var tableHtml = '<table class="report-table">';
+          while (i < lines.length && lines[i].match(/^\|/)) {
+            var cells = lines[i].split('|').filter(function(c) { return c.trim() !== ''; });
+            if (cells.length > 0) {
+              if (cells.every(function(c) { return /^[-:]+$/.test(c.trim()); })) {
+                // separator row - skip or convert to <thead>
+                i++; continue;
+              }
+              if (tableHtml.indexOf('<thead>') === -1) {
+                tableHtml += '<thead><tr>';
+                cells.forEach(function(c) { tableHtml += '<th>' + c.trim() + '</th>'; });
+                tableHtml += '</tr></thead><tbody>';
+              } else {
+                tableHtml += '<tr>';
+                cells.forEach(function(c) {
+                  var c2 = c.trim();
+                  if (c2.match(/^\*\*.*\*\*$/)) {
+                    var inner = c2.replace(/^\*\*|\*\*$/g, '');
+                    var tagClass = 'tag-neutral';
+                    if (inner.match(/偏高|正常健康区间|正常偏低/)) tagClass = 'tag-ok';
+                    else if (inner.match(/偏低|收窄|谨慎|偏低，套利空间收窄|中等|持续收窄/i)) tagClass = 'tag-warn';
+                    tableHtml += '<td><span class="' + tagClass + '">' + inner + '</span></td>';
+                  } else if (c2.match(/^[0-9]+\.?[0-9]*%$/)) {
+                    var val = parseFloat(c2);
+                    var cls = val >= 12 ? 'highlight' : val >= 5 ? 'ok' : val >= 2 ? 'warn' : 'fail';
+                    tableHtml += '<td class="' + cls + '">' + c2 + '</td>';
+                  } else if (c2.match(/^[0-9,]+张$/)) {
+                    tableHtml += '<td>' + c2 + '</td>';
+                  } else {
+                    tableHtml += '<td>' + c2 + '</td>';
+                  }
+                });
+                tableHtml += '</tr>';
+              }
+            }
+            i++;
+          }
+          tableHtml += '</tbody></table>';
+          html += tableHtml;
+          continue;
+        }
+        // Bullet list
+        if (line.match(/^-\s/)) {
+          if (!html.match(/<ul class="report-bullet">$/)) {
+            html += '<ul class="report-bullet">';
+          }
+          var bulletText = line.replace(/^- /, '').replace(/\*\*/g, '');
+          html += '<li>' + bulletText + '</li>';
+          i++; continue;
+        }
+        // Close ul
+        if (html.match(/<ul class="report-bullet">$/) && !line.match(/^-\s/)) {
+          html += '</ul>';
+        }
+        // Blockquote
+        if (line.match(/^>\s/)) {
+          html += '<div class="report-quote">' + line.replace(/^>\s/, '').replace(/\*\*/g, '') + '</div>';
+          i++; continue;
+        }
+        // Bold line
+        if (line.match(/^\*\*.*\*\*$/)) {
+          html += '<div class="report-quote">' + line.replace(/\*\*/g, '') + '</div>';
+          i++; continue;
+        }
+        // Footer line
+        if (line.match(/^\*报告基于/) || line.match(/^\*报告日期.*\*/)) {
+          i++; continue;
+        }
+        // Regular text inside section
+        if (line.trim() && !line.match(/^#/)) {
+          var text = line.replace(/\*\*/g, '');
+          html += '<p>' + text + '</p>';
+        }
+        i++;
+      }
+      if (html.match(/<ul class="report-bullet">$/)) html += '</ul>';
+      // Close any open report-card div
+      if (html.match(/<div class="report-card">/) && !html.match(/<\/div>\s*<div class="report-section">/)) {
+        html += '</div>';
+      }
+      return html;
+    }
+
     function toggleFeedDetail(date) {
       var detail = document.getElementById('feed-detail-' + date);
       if (!detail) return;
       var show = detail.style.display === 'none';
       detail.style.display = show ? '' : 'none';
-      if (show) localStorage.setItem('feed_viewed_' + date, '1');
+      if (show) {
+        localStorage.setItem('feed_viewed_' + date, '1');
+        // Fetch and render markdown
+        var item = data.find(function(d) { return d.date === date; });
+        if (item && !detail.dataset.loaded) {
+          detail.dataset.loaded = '1';
+          fetch('data/feed/' + item.filename).then(r => r.text()).then(md => {
+            detail.innerHTML = '<div class="report-card">' + renderMarkdown(md) + '</div>';
+          }).catch(() => {
+            detail.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>加载失败</h3></div>';
+          });
+        }
+      }
     }
     window.toggleFeedDetail = toggleFeedDetail;
     window.renderFeed = renderFeed;
