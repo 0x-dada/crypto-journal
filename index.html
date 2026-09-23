@@ -8,89 +8,58 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&family=Oswald:ital,wght@0,300;0,400;0,700;1,700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-   <link rel="stylesheet" href="css/style.css?v=5924">
-    <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh}
-    .feed-item{border-bottom:1px solid #2a2a4a;padding:16px 20px;cursor:pointer;background:#141428;border-radius:12px;margin-bottom:8px}
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/style.css?v=5925">
+   <style>
+    .feed-item{border-bottom:1px solid #eee;padding:12px 0;cursor:pointer}
     .feed-item:last-child{border-bottom:none}
     .feed-item__head{display:flex;align-items:center;gap:8px}
-    .feed-dot-viewed{width:8px;height:8px;border-radius:50%;background:#28a745}
-    .feed-dot-unviewed{width:8px;height:8px;border-radius:50%;background:#dc3545}
-    .feed-date{font-weight:600;font-size:14px;color:#e0e0e0}
-    .feed-title{font-size:14px;color:#888;flex:1}
-    .feed-viewed{font-size:12px;color:#666}
+    .feed-dot-viewed{width:8px;height:8px;border-radius:50%;background:#4c8468}
+    .feed-dot-unviewed{width:8px;height:8px;border-radius:50%;background:#b33a2b}
+    .feed-date{font-weight:600;font-size:14px;color:#14140f}
+    .feed-title{font-size:14px;color:#555;flex:1}
+    .feed-viewed{font-size:12px;color:#999}
     .feed-detail{padding:0;overflow:hidden}
-    .feed-detail .card{background:#141428;border-radius:16px;padding:20px;border:1px solid #2a2a4a;position:relative;overflow:hidden;margin-bottom:16px}
-    .feed-detail .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#667eea,#764ba2)}
-    .feed-detail .card .label{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-    .feed-detail .card .value{font-size:32px;font-weight:700;color:#fff}
-    .feed-detail .card .unit{font-size:14px;color:#aaa;margin-left:4px}
-    .feed-detail .card .sub{font-size:13px;color:#aaa;margin-top:8px}
-    .feed-detail .card.warning{border-color:#fd7e1444}
-    .feed-detail .card.warning .value{color:#fd7e14}
-    .feed-detail .card.normal{border-color:#28a74544}
-    .feed-detail .card.normal .value{color:#28a745}
-    .feed-detail .card.low{border-color:#dc354544}
-    .feed-detail .card.low .value{color:#dc3545}
-    .feed-detail .section-title{font-size:18px;font-weight:600;margin:24px 0 12px;color:#667eea}
-    .feed-detail .report-section{border:1px solid #2a2a4a;border-radius:12px;padding:16px;background:#141428;margin-bottom:12px}
-    .feed-detail .report-section h3{font-size:16px;font-weight:700;color:#667eea;border-left:3px solid #667eea;padding-left:10px;margin-bottom:12px}
-    .feed-detail .report-section h4{font-size:14px;font-weight:600;color:#e0e0e0;margin:8px 0 4px}
-    .feed-detail .report-section p{font-size:13px;color:#aaa;line-height:1.6;margin:4px 0}
-    .feed-detail .report-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:14px}
-    .feed-detail .report-table th{text-align:left;padding:10px 12px;background:#1a1a3a;color:#888;font-weight:500;border-bottom:2px solid #2a2a4a}
-    .feed-detail .report-table td{padding:10px 12px;border-bottom:1px solid #2a2a4a;color:#e0e0e0}
-    .feed-detail .report-table tr:nth-child(even) td{background:#111128}
-    .feed-detail .report-table td.current{color:#fd7e14;font-weight:600}
-    .feed-detail .report-table .highlight{background:#fd7e1433;font-weight:600;color:#fd7e14}
-    .feed-detail .report-table .ok{color:#28a745;font-weight:600}
-    .feed-detail .report-table .warn{color:#fd7e14}
+    .feed-detail .report-card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:20px;margin-bottom:12px}
+    .feed-detail .report-card__title{font-size:20px;font-weight:700;color:#14140f;margin-bottom:4px}
+    .feed-detail .report-section{margin-bottom:16px}
+    .feed-detail .report-section h3{font-size:16px;font-weight:700;color:#14140f;border-left:3px solid #b33a2b;padding-left:8px;margin-bottom:8px}
+    .feed-detail .report-section h4{font-size:14px;font-weight:600;color:#333;margin:8px 0 4px}
+    .feed-detail .report-section p{font-size:13px;color:#444;line-height:1.6;margin:4px 0}
+    .feed-detail .report-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+    .feed-detail .report-table th{background:#14140f;color:#fff;padding:6px 10px;text-align:left;font-weight:500}
+    .feed-detail .report-table td{padding:6px 10px;border-bottom:1px solid #eee;color:#333}
+    .feed-detail .report-table tr:nth-child(even) td{background:#f9f9f9}
+    .feed-detail .report-table .highlight{background:#fff3e0;font-weight:600;color:#b33a2b}
+    .feed-detail .report-table .ok{color:#4c8468;font-weight:600}
+    .feed-detail .report-table .warn{color:#b33a2b}
     .feed-detail .report-table .neutral{color:#666}
-    .feed-detail .report-table td:first-child{font-weight:600;color:#e0e0e0}
-    .feed-detail .report-table .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
-    .feed-detail .report-table .tag-ok{background:#28a74533;color:#28a745}
-    .feed-detail .report-table .tag-warn{background:#fd7e1433;color:#fd7e14}
-    .feed-detail .report-table .tag-neutral{background:#66633;color:#666}
-    .feed-detail .report-table .tag-fail{background:#dc354533;color:#dc3545}
-    .feed-detail .report-bullet{font-size:13px;color:#aaa;line-height:1.8;padding-left:4px}
+    .feed-detail .report-table td:first-child{font-weight:600;color:#14140f}
+    .feed-detail .report-table td:first-child .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+    .feed-detail .report-table .tag-ok{background:#e8f5e9;color:#4c8468}
+    .feed-detail .report-table .tag-warn{background:#fff3e0;color:#b33a2b}
+    .feed-detail .report-table .tag-neutral{background:#f5f5f5;color:#666}
+    .feed-detail .report-table .tag-fail{background:#ffebee;color:#b33a2b}
+    .feed-detail .report-bullet{font-size:13px;color:#444;line-height:1.8;padding-left:4px}
     .feed-detail .report-bullet li{margin-bottom:2px}
-    .feed-detail .report-rule{border:none;border-top:1px dashed #2a2a4a;margin:12px 0}
-    .feed-detail .report-quote{border-left:3px solid #667eea;padding-left:12px;font-size:13px;color:#888;font-style:italic;margin:8px 0;background:#111128;border-radius:0 8px 8px 0;padding:8px 12px}
-    .feed-detail .report-conclusion{background:linear-gradient(135deg,#1a1a3a 0%,#141428 100%);color:#fff;border-radius:12px;padding:16px 20px;margin-top:12px;border:1px solid #667eea44}
+    .feed-detail .report-rule{border:none;border-top:1px dashed #ddd;margin:12px 0}
+    .feed-detail .report-quote{border-left:3px solid #b33a2b;padding-left:12px;font-size:13px;color:#666;font-style:italic;margin:8px 0}
+    .feed-detail .report-conclusion{background:linear-gradient(135deg,#14140f 0%,#1a1a12 100%);color:#fff;border-radius:12px;padding:16px 20px;margin-top:12px}
     .feed-detail .report-conclusion h3{color:#fff;border-left-color:#f0c040}
-    .feed-detail .report-conclusion p{color:#ccc}
-    .feed-detail .report-footer{text-align:center;color:#555;font-size:12px;margin-top:24px;padding-top:16px;border-top:1px solid #2a2a4a}
-    .feed-detail .bar-chart{display:flex;gap:8px;align-items:flex-end;height:100px;margin:12px 0}
-    .feed-detail .bar{flex:1;border-radius:4px 4px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:4px;font-size:10px;color:#fff;font-weight:600}
-    .feed-detail .bar.normal{background:linear-gradient(to top,#28a745,#2ea043)}
-    .feed-detail .bar.low{background:linear-gradient(to top,#dc3545,#e5484d)}
-    .feed-detail .bar.medium{background:linear-gradient(to top,#fd7e14,#f0883e)}
-    .feed-detail .bar.current{box-shadow:0 0 12px rgba(253,126,20,.5);transform:scaleY(1.05)}
-    .feed-detail .bar .range{font-size:9px;color:#666;margin-top:2px}
-    .feed-detail .flow{display:flex;align-items:center;gap:8px;margin:16px 0;flex-wrap:wrap;justify-content:center}
-    .feed-detail .flow-step{background:#141428;border:1px solid #2a2a4a;border-radius:12px;padding:12px 16px;font-size:13px;text-align:center;min-width:100px}
-    .feed-detail .flow-step .f-label{font-size:11px;color:#888}
-    .feed-detail .flow-step .f-val{font-size:16px;font-weight:600;color:#fff;margin-top:4px}
-    .feed-detail .flow-arrow{color:#667eea;font-size:20px}
-    .feed-detail .sentiment-badge{display:inline-block;padding:8px 20px;border-radius:20px;font-size:16px;font-weight:600;background:linear-gradient(135deg,#fd7e1433,#fd7e14);color:#fd7e14;border:1px solid #fd7e1455}
+    .feed-detail .report-conclusion p{color:#ddd}
+    .feed-detail .report-footer{font-size:11px;color:#aaa;margin-top:12px;text-align:center}
     @media(max-width:480px){
-      .feed-item{padding:12px;border-radius:8px}
-      .feed-detail .card{padding:12px;border-radius:8px}
-      .feed-detail .report-section{padding:12px;border-radius:8px}
+      .feed-item{padding:8px 0}
+      .feed-detail .report-card{padding:12px}
       .feed-detail .report-section h3{font-size:13px}
       .feed-detail .report-section p{font-size:11px}
       .feed-detail .report-table{font-size:11px}
-      .feed-detail .report-table th,.feed-detail .report-table td{padding:6px 8px;font-size:11px}
-      .feed-detail .report-bullet{font-size:11px}
-      .feed-detail .report-quote{font-size:11px}
-      .feed-detail .report-conclusion{padding:10px 12px}
-      .feed-detail .report-conclusion p{font-size:11px}
-      .feed-detail .bar-chart{height:80px}
+      .feed-detail .report-table th,.feed-detail .report-table td{padding:4px 6px;font-size:11px}
     }
    </style>
 </head>
-<body>
+<body style="background:#0a0a1a;color:#e0e0e0">
 
   <header class="nav">
     <div class="nav__inner">
@@ -534,14 +503,14 @@
         </div>
       </section>
       
-       <section class="section" id="panelFeed" style="display:none">
-         <div class="wrap wrap--narrow">
-           <div class="card card--flat">
-             <div class="card__head"><div><h3 class="card__title">每日摘要</h3><p class="card__sub">CME 比特币机构情绪日报，点开查看详情</p></div></div>
-             <div id="feedList"></div>
-           </div>
-         </div>
-       </section>
+      <section class="section" id="panelFeed" style="display:none">
+        <div class="wrap wrap--narrow">
+          <div class="card card--flat">
+            <div class="card__head"><div><h3 class="card__title">社区动态</h3><p class="card__sub">圈子里的新想法与互动，热闹都在这里。</p></div></div>
+            <div class="empty" id="clubEmptyFeed"><div class="empty-icon">🫂</div><h3>还没有动态</h3><p>有动态会第一时间冒出来。</p></div>
+          </div>
+        </div>
+      </section>
       <section class="section" id="panelStory" style="display:none">
         <div class="wrap wrap--narrow">
           <div class="card card--flat">
@@ -571,6 +540,17 @@
   <script src="js/app.js?v=5888"></script>
   <script src="js/history.js?v=5888"></script>
   <script src="js/stats.js?v=5888"></script>
+  <div id="token-banner" style="display:none;background:#1a1a1a;color:#fff;text-align:center;padding:12px;margin:0;position:fixed;top:0;left:0;right:0;z-index:9999;font-size:14px;font-family:sans-serif;">
+    <input id="token-input" type="text" placeholder="粘贴 GitHub Token" style="width:70%;padding:8px;margin:6px 0;border-radius:6px;border:none;font-size:14px;"/>
+    <button onclick="saveToken()" style="padding:8px 16px;border-radius:6px;border:none;background:#333;color:#fff;cursor:pointer;font-size:14px;">保存</button>
+  </div>
+  <script>
+  function saveToken() {
+    var t = document.getElementById('token-input').value.trim();
+    if (t) { localStorage.setItem('gh_token', t); document.getElementById('token-banner').style.display='none'; location.reload(); }
+  }
+  if (!localStorage.getItem('gh_token')) { document.getElementById('token-banner').style.display='block'; }
+  </script>
   <script>
     /* Router */
     function switchView(v) {
@@ -593,9 +573,8 @@
       document.getElementById("panelBooks").style.display = tab === "books" ? "" : "none";
       document.getElementById("panelFeed").style.display = tab === "feed" ? "" : "none";
       document.getElementById("panelStory").style.display = tab === "story" ? "" : "none";
-       if (tab === "books") renderBooks();
-       if (tab === "feed") renderFeed();
-     }
+      if (tab === "books") renderBooks();
+    }
     window.books = [
          { id: 'book1', title: '股票作手回忆录', author: '埃德温·勒费弗', cover: 'covers/book1.png', initial: '', summary: '本书是华尔街传奇操盘手杰西·利弗莫尔的传记式经典。书中记录了他从14岁入市到数次大起大落的交易生涯，深刻揭示了市场趋势、人性弱点与交易纪律的关系。对任何想在市场中长期生存的交易者而言，这都是一本必读之作。' },
          { id: 'book2', title: '纪律交易者', author: '马克·道格拉斯', cover: 'covers/book2.png', initial: '', summary: '马克·道格拉斯经典之作。书中直指交易者亏损的根源并非技术不足，而是心理与纪律的缺失。通过系统的训练方法，帮助交易者建立赢家心智，克服恐惧与贪婪，在市场中保持一致性盈利。' },
@@ -968,155 +947,158 @@
       const d = document.getElementById('tradeDate');
       if (d) d.valueAsDate = new Date();
     })();
-     CJ.init().then(() => {}).catch(console.error);
+    CJ.init().then(() => {}).catch(console.error);
 
-     /* Daily feed */
-     var feedData = [];
+    /* Daily feed */
+    var feedData = [];
 
-     function renderFeed() {
-       var list = document.getElementById('feedList');
-       if (!list) return;
-       fetch('data/feed/summary.json').then(r => r.json()).then(data => {
-         feedData = data || [];
-         if (!feedData.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><h3>暂无日报</h3><p>每天8:30后会更新当日摘要。</p></div>'; return; }
-         list.innerHTML = feedData.map(item => {
-           var viewed = localStorage.getItem('feed_viewed_' + item.date) ? '已查看' : '未查看';
-           var dotClass = viewed === '已查看' ? 'feed-dot-viewed' : 'feed-dot-unviewed';
-           return '<div class="feed-item" onclick="toggleFeedDetail(\'' + item.date + '\')">' +
-             '<div class="feed-item__head">' +
-               '<span class="' + dotClass + '"></span>' +
-               '<span class="feed-date">' + item.date + ' ' + item.weekday + '</span>' +
-               '<span class="feed-title">' + item.title + '</span>' +
-               '<span class="feed-viewed">' + viewed + '</span>' +
-             '</div>' +
-             '<div class="feed-detail" id="feed-detail-' + item.date + '" style="display:none"></div>' +
-           '</div>';
-         }).join('');
-       }).catch(e => { list.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>加载失败</h3></div>'; });
-     }
+    function renderFeed() {
+      var list = document.getElementById('feedList');
+      if (!list) return;
+      fetch('data/feed/summary.json').then(r => r.json()).then(data => {
+        feedData = data || [];
+        if (!feedData.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><h3>暂无日报</h3><p>每天8:30后会更新当日摘要。</p></div>'; return; }
+        list.innerHTML = feedData.map(item => {
+          var viewed = localStorage.getItem('feed_viewed_' + item.date) ? '已查看' : '未查看';
+          var dotClass = viewed === '已查看' ? 'feed-dot-viewed' : 'feed-dot-unviewed';
+          return '<div class="feed-item" onclick="toggleFeedDetail(\'' + item.date + '\')">' +
+            '<div class="feed-item__head">' +
+              '<span class="' + dotClass + '"></span>' +
+              '<span class="feed-date">' + item.date + ' ' + item.weekday + '</span>' +
+              '<span class="feed-title">' + item.title + '</span>' +
+              '<span class="feed-viewed">' + viewed + '</span>' +
+            '</div>' +
+            '<div class="feed-detail" id="feed-detail-' + item.date + '" style="display:none"></div>' +
+          '</div>';
+        }).join('');
+      }).catch(e => { list.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>加载失败</h3></div>'; });
+    }
 
-     function renderMarkdown(md) {
-       var html = '';
-       var lines = md.split('\n');
-       var i = 0;
-       var inCard = false;
-       var inSection = false;
-       var inUl = false;
-       while (i < lines.length) {
-         var line = lines[i];
-         // H1
-          if (line.match(/^#\s/)) {
-            html += '<div class="card">';
-            inCard = true;
-            i++; continue;
-          }
-          // HR
-         if (line.trim() === '---') {
-           html += '<hr class="report-rule">';
-           i++; continue;
-         }
-         // Empty
-         if (line.trim() === '') {
-           if (inUl) { html += '</ul>'; inUl = false; }
-           i++; continue;
-         }
-         // H2
-         if (line.match(/^##\s/)) {
-           if (inSection) html += '</div>';
-           html += '<div class="report-section"><h3>' + line.replace(/^##\s/, '') + '</h3>';
-           inSection = true;
-           i++; continue;
-         }
-         // H3
-         if (line.match(/^###\s/)) {
-           html += '<h4>' + line.replace(/^###\s/, '') + '</h4>';
-           i++; continue;
-         }
-         // Table
-         if (line.match(/^\|/)) {
-           var tableHtml = '<table class="report-table">';
-           while (i < lines.length && lines[i].match(/^\|/)) {
-             var cells = lines[i].split('|').filter(function(c) { return c.trim() !== ''; });
-             if (cells.length > 0 && !cells.every(function(c) { return /^[-:]+$/.test(c.trim()); })) {
-               if (!tableHtml.match(/<thead>/)) {
-                 tableHtml += '<thead><tr>';
-                 cells.forEach(function(c) { tableHtml += '<th>' + c.trim() + '</th>'; });
-                 tableHtml += '</tr></thead><tbody>';
-               }
-               tableHtml += '<tr>';
-               cells.forEach(function(c) {
-                 var c2 = c.trim();
-                 if (c2.match(/^\*\*.*\*\*$/)) {
-                   var inner = c2.replace(/^\*\*|\*\*$/g, '');
-                   var tagClass = 'tag-neutral';
-                   if (inner.match(/偏高|正常健康区间|正常偏低/)) tagClass = 'tag-ok';
-                   else if (inner.match(/偏低|收窄|谨慎|中等|持续收窄/i)) tagClass = 'tag-warn';
-                   tableHtml += '<td><span class="' + tagClass + '">' + inner + '</span></td>';
-                 } else if (c2.match(/^[0-9]+\.?[0-9]*%$/)) {
-                   var val = parseFloat(c2);
-                   var cls = val >= 12 ? 'highlight' : val >= 5 ? 'ok' : 'warn';
-                   tableHtml += '<td class="' + cls + '">' + c2 + '</td>';
-                 } else {
-                   tableHtml += '<td>' + c2 + '</td>';
-                 }
-               });
-               tableHtml += '</tr>';
-             }
-             i++;
-           }
-           tableHtml += '</tbody></table>';
-           html += tableHtml;
-           continue;
-         }
-         // Bullet
-         if (line.match(/^-\s/)) {
-           if (!inUl) { html += '<ul class="report-bullet">'; inUl = true; }
-           html += '<li>' + line.replace(/^- /, '').replace(/\*\*/g, '') + '</li>';
-           i++; continue;
-         }
-         // Blockquote
-         if (line.match(/^>\s/)) {
-           html += '<div class="report-quote">' + line.replace(/^>\s/, '').replace(/\*\*/g, '') + '</div>';
-           i++; continue;
-         }
-         // Regular text
-         if (line.trim() && !line.match(/^#/)) {
-           var text = line.replace(/\*\*/g, '');
-           if (text.match(/^核心判断/)) {
-             html += '<div class="report-conclusion"><h3>综合结论</h3><p>' + text + '</p></div>';
-           } else {
-             html += '<p>' + text + '</p>';
-           }
-         }
-         i++;
-       }
-       if (inUl) html += '</ul>';
-       if (inSection) html += '</div>';
-       if (inCard) html += '</div>';
-       return html;
-     }
-
-     function toggleFeedDetail(date) {
-       var detail = document.getElementById('feed-detail-' + date);
-       if (!detail) return;
-       var show = detail.style.display === 'none';
-       detail.style.display = show ? '' : 'none';
-       if (show) {
-         localStorage.setItem('feed_viewed_' + date, '1');
-         var item = feedData.find(function(d) { return d.date === date; });
-            if (item && !detail.dataset.loaded) {
-            detail.dataset.loaded = '1';
-            var md = item.content || '';
-            if (md) {
-              detail.innerHTML = renderMarkdown(md);
-            } else {
-              detail.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>加载失败</h3></div>';
+    function renderMarkdown(md) {
+      var html = '';
+      var lines = md.split('\n');
+      var i = 0;
+      var inCard = false;
+      var inSection = false;
+      var inUl = false;
+      while (i < lines.length) {
+        var line = lines[i];
+        if (line.match(/^#\s/)) {
+          html += '<div class="card">';
+          inCard = true;
+          i++; continue;
+        }
+        if (line.trim() === '---') {
+          html += '<hr class="report-rule">';
+          i++; continue;
+        }
+        if (line.trim() === '') {
+          if (inUl) { html += '</ul>'; inUl = false; }
+          i++; continue;
+        }
+        if (line.match(/^##\s/)) {
+          if (inSection) html += '</div>';
+          html += '<div class="report-section"><h3>' + line.replace(/^##\s/, '') + '</h3>';
+          inSection = true;
+          i++; continue;
+        }
+        if (line.match(/^###\s/)) {
+          html += '<h4>' + line.replace(/^###\s/, '') + '</h4>';
+          i++; continue;
+        }
+        if (line.match(/^\|/)) {
+          var tableHtml = '<table class="report-table">';
+          while (i < lines.length && lines[i].match(/^\|/)) {
+            var cells = lines[i].split('|').filter(function(c) { return c.trim() !== ''; });
+            if (cells.length > 0 && !cells.every(function(c) { return /^[-:]+$/.test(c.trim()); })) {
+              if (!tableHtml.match(/<thead>/)) {
+                tableHtml += '<thead><tr>';
+                cells.forEach(function(c) { tableHtml += '<th>' + c.trim() + '</th>'; });
+                tableHtml += '</tr></thead><tbody>';
+              }
+              tableHtml += '<tr>';
+              cells.forEach(function(c) {
+                var c2 = c.trim();
+                if (c2.match(/^\*\*.*\*\*$/)) {
+                  var inner = c2.replace(/^\*\*|\*\*$/g, '');
+                  var tagClass = 'tag-neutral';
+                  if (inner.match(/偏高|正常健康区间|正常偏低/)) tagClass = 'tag-ok';
+                  else if (inner.match(/偏低|收窄|谨慎|中等|持续收窄/i)) tagClass = 'tag-warn';
+                  tableHtml += '<td><span class="' + tagClass + '">' + inner + '</span></td>';
+                } else if (c2.match(/^[0-9]+\.?[0-9]*%$/)) {
+                  var val = parseFloat(c2);
+                  var cls = val >= 12 ? 'highlight' : val >= 5 ? 'ok' : 'warn';
+                  tableHtml += '<td class="current">' + c2 + '</td>';
+                } else if (c2.match(/^[0-9,]+张$/)) {
+                  tableHtml += '<td class="current">' + c2 + '</td>';
+                } else {
+                  tableHtml += '<td>' + c2 + '</td>';
+                }
+              });
+              tableHtml += '</tr>';
             }
+            i++;
           }
-       }
-     }
-     window.toggleFeedDetail = toggleFeedDetail;
-     window.renderFeed = renderFeed;
+          tableHtml += '</tbody></table>';
+          html += tableHtml;
+          continue;
+        }
+        if (line.match(/^-\s/)) {
+          if (!inUl) { html += '<ul class="report-bullet">'; inUl = true; }
+          html += '<li>' + line.replace(/^- /, '').replace(/\*\*/g, '') + '</li>';
+          i++; continue;
+        }
+        if (line.match(/^>\s/)) {
+          html += '<div class="report-quote">' + line.replace(/^>\s/, '').replace(/\*\*/g, '') + '</div>';
+          i++; continue;
+        }
+        if (line.trim() && !line.match(/^#/)) {
+          var text = line.replace(/\*\*/g, '');
+          if (text.match(/^核心判断/)) {
+            html += '<div class="report-conclusion"><h3>综合结论</h3><p>' + text + '</p></div>';
+          } else {
+            html += '<p>' + text + '</p>';
+          }
+        }
+        i++;
+      }
+      if (inUl) html += '</ul>';
+      if (inSection) html += '</div>';
+      if (inCard) html += '</div>';
+      return html;
+    }
+
+    function toggleFeedDetail(date) {
+      var detail = document.getElementById('feed-detail-' + date);
+      if (!detail) return;
+      var show = detail.style.display === 'none';
+      detail.style.display = show ? '' : 'none';
+      if (show) {
+        localStorage.setItem('feed_viewed_' + date, '1');
+        var item = feedData.find(function(d) { return d.date === date; });
+        if (item && !detail.dataset.loaded) {
+          detail.dataset.loaded = '1';
+          var md = item.content || '';
+          if (md) {
+            detail.innerHTML = renderMarkdown(md);
+          } else {
+            detail.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>加载失败</h3></div>';
+          }
+        }
+      }
+    }
+    window.toggleFeedDetail = toggleFeedDetail;
+    window.renderFeed = renderFeed;
   </script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js?v=3').then(reg => {
+      console.log('SW registered:', reg.scope);
+    }).catch(err => console.log('SW registration failed:', err));
+  });
+}
+</script>
 </body>
 </html>
