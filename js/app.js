@@ -8,58 +8,11 @@
   const STORE = 'trades';
   const NOTES_STORE = 'notes';
 
-   let _dbPromise = null;
+  let _dbPromise = null;
 
-   // ---------- GitHub API sync ----------
-   const GH_REPO = '0x-dada/crypto-journal';
-   const GH_DATA_URL = 'https://api.github.com/repos/' + GH_REPO + '/contents/data.json';
-   const GH_NOTES_URL = 'https://api.github.com/repos/' + GH_REPO + '/contents/notes.json';
-
-   function getGhToken() { return localStorage.getItem('gh_token'); }
-
-   async function ghFetch(url) {
-     const tok = getGhToken();
-     const r = await fetch(url, { headers: { 'Authorization': 'token ' + tok, 'Accept': 'application/vnd.github.v3+json' } });
-     if (!r.ok) throw new Error('GH ' + r.status);
-     return r.json();
-   }
-
-   async function ghPush(url, content, b64) {
-     const tok = getGhToken();
-     const encoded = b64 || btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2))));
-     const r = await fetch(url, {
-       method: 'PUT',
-       headers: { 'Authorization': 'token ' + tok, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
-       body: JSON.stringify({ message: 'sync via crypto-journal', content: encoded })
-     });
-     if (!r.ok) throw new Error('GH push ' + r.status);
-     return r.json();
-   }
-
-   async function fetchGitHubData() {
-     if (!getGhToken()) return null;
-     try {
-       const j = await ghFetch(GH_DATA_URL);
-       const decoded = new TextDecoder().decode(Uint8Array.from(atob(j.content), c => c.charCodeAt(0)));
-       const d = JSON.parse(decoded);
-       if (Array.isArray(d) && d.length > 0) return d;
-     } catch (e) {}
-     return null;
-   }
-
-   async function pushToGitHub() {
-     const local = await idbGetAll();
-     await ghPush(GH_DATA_URL, local);
-   }
-
-   async function pushNotesToGitHub() {
-     const notes = await idbNoteGetAll();
-     await ghPush(GH_NOTES_URL, notes);
-   }
-
-   // ---------- Sync (shared server data source) ----------
-   const SYNC_KEY = 'cj_sync_cfg';
-   let _syncBase = null;
+  // ---------- Sync (shared server data source) ----------
+  const SYNC_KEY = 'cj_sync_cfg';
+  let _syncBase = null;
 
   function servedByHttp() {
     return /^https?:$/.test(location.protocol);
@@ -211,41 +164,45 @@
   }
 
   // ---------- CRUD ----------
-   async function getAllTrades() {
-     if (_syncBase) {
-       try {
-         const j = await apiReq('/api/trades', 'GET');
-         const list = Array.isArray(j.trades) ? j.trades : [];
-         list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-         return list;
-       } catch (e) { /* server offline -> fallthrough to local */ }
-     }
-     const list = await idbGetAll();
-     if (list.length === 0) {
-       const ghData = await fetchGitHubData();
-       if (ghData && ghData.length > 0) { list = ghData; }
-       else { try { const j = await fetch('/data.json').then(r => r.json()); if (Array.isArray(j)) { list = j; } } catch (e) { /* use empty */ } }
-     }
-     list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-     return list;
-   }
+  async function getAllTrades() {
+    if (_syncBase) {
+      try {
+        const j = await apiReq('/api/trades', 'GET');
+        const list = Array.isArray(j.trades) ? j.trades : [];
+        list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        return list;
+      } catch (e) { /* server offline -> fallthrough to local */ }
+    }
+    const list = await idbGetAll();
+    list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return list;
+  }
 
-   async function saveTrade(trade) {
-     if (!trade.id) trade.id = (trade.createdAt || new Date().toISOString());
-     await idbPut(trade);
-     try { await pushToGitHub(); } catch (e) {}
-     return trade;
-   }
+  async function saveTrade(trade) {
+    if (!trade.id) trade.id = (trade.createdAt || new Date().toISOString());
+    if (_syncBase) {
+      await apiReq('/api/trades', 'POST', trade);
+      return trade;
+    }
+    await idbPut(trade);
+    return trade;
+  }
 
-   async function deleteTrade(id) {
-     await idbDelete(id);
-     try { await pushToGitHub(); } catch (e) {}
-   }
+  async function deleteTrade(id) {
+    if (_syncBase) {
+      await apiReq('/api/trades/' + encodeURIComponent(id), 'DELETE');
+      return;
+    }
+    await idbDelete(id);
+  }
 
-   async function wipeAll() {
-     await idbClear();
-     try { await pushToGitHub(); } catch (e) {}
-   }
+  async function wipeAll() {
+    if (_syncBase) {
+      await apiReq('/api/trades/clear', 'POST');
+      return;
+    }
+    await idbClear();
+  }
 
   // ---------- Notes CRUD ----------
   async function idbNotePut(note) {
@@ -265,41 +222,37 @@
     });
   }
 
-   async function getAllNotes() {
-     if (_syncBase) {
-       try {
-         const j = await apiReq('/api/notes', 'GET');
-         const list = Array.isArray(j.notes) ? j.notes : [];
-         list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-         return list;
-       } catch (e) { /* fallthrough to local */ }
-     }
-     const list = await idbNoteGetAll();
-     if (list.length === 0) {
-       try {
-         const gh = await ghFetch(GH_NOTES_URL);
-         if (gh && gh.content) {
-           const decoded = new TextDecoder().decode(Uint8Array.from(atob(gh.content), c => c.charCodeAt(0)));
-           const parsed = JSON.parse(decoded);
-           if (Array.isArray(parsed)) return parsed;
-         }
-       } catch (e) {}
-     }
-     list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-     return list;
-   }
+  async function getAllNotes() {
+    if (_syncBase) {
+      try {
+        const j = await apiReq('/api/notes', 'GET');
+        const list = Array.isArray(j.notes) ? j.notes : [];
+        list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        return list;
+      } catch (e) { /* fallthrough to local */ }
+    }
+    const list = await idbNoteGetAll();
+    list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return list;
+  }
 
-   async function saveNote(note) {
-     if (!note.id) note.id = (note.createdAt || new Date().toISOString());
-     await idbNotePut(note);
-     try { await pushNotesToGitHub(); } catch (e) {}
-     return note;
-   }
+  async function saveNote(note) {
+    if (!note.id) note.id = (note.createdAt || new Date().toISOString());
+    if (_syncBase) {
+      await apiReq('/api/notes', 'POST', note);
+      return note;
+    }
+    await idbNotePut(note);
+    return note;
+  }
 
-   async function deleteNote(id) {
-     await idbNoteDelete(id);
-     try { await pushNotesToGitHub(); } catch (e) {}
-   }
+  async function deleteNote(id) {
+    if (_syncBase) {
+      await apiReq('/api/notes/' + encodeURIComponent(id), 'DELETE');
+      return;
+    }
+    await idbNoteDelete(id);
+  }
 
   // ---------- PnL ----------
   function toNum(v) {
@@ -452,25 +405,13 @@
     _toastEl._t = setTimeout(() => { _toastEl.style.opacity = '0'; }, 2600);
   }
 
-   // ---------- Init (pages call this first) ----------
-   async function init() {
-     await openDB();
-     await migrateLegacy();
-     // Try to fetch from GitHub
-     if (getGhToken()) {
-       try {
-         const ghData = await fetchGitHubData();
-         if (ghData && ghData.length > 0) {
-           const existing = await idbGetAll();
-           if (existing.length === 0) {
-             for (const t of ghData) await idbPut(t);
-           }
-         }
-       } catch (e) { /* GitHub unreachable, use local */ }
-     }
-     await detectSync();
-     return true;
-   }
+  // ---------- Init (pages call this first) ----------
+  async function init() {
+    await openDB();
+    const migrated = await migrateLegacy();
+    await detectSync();
+    return migrated;
+  }
 
   global.CJ = {
     init, getAllTrades, saveTrade, deleteTrade, wipeAll,
