@@ -21,7 +21,6 @@
     .feed-detail { padding: 0; overflow: hidden; }
      .feed-detail .report-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 20px; margin-bottom: 12px; }
      .feed-detail .report-card__title { font-size: 20px; font-weight: 700; color: #14140f; margin-bottom: 0; padding-bottom: 2px; }
-     .feed-detail .report-card__sub { font-size: 13px; color: #999; margin-bottom: 12px; margin-top: 0; padding-bottom: 8px; border-bottom: 1px solid #eee; }
      .feed-detail .report-section { margin-bottom: 16px; }
     .feed-detail .report-section h3 { font-size: 16px; font-weight: 700; color: #14140f; border-left: 3px solid #b33a2b; padding-left: 8px; margin-bottom: 8px; }
     .feed-detail .report-section h4 { font-size: 14px; font-weight: 600; color: #333; margin: 8px 0 4px; }
@@ -990,12 +989,7 @@
             inCard = true;
             i++; continue;
           }
-         // Subtitle
-         if (line.match(/^\*\*报告日期/) || line.match(/^\*\*数据来源/)) {
-           html += '<div class="report-card__sub">' + line.replace(/\*\*/g, '') + '</div>';
-           i++; continue;
-         }
-         // HR
+          // HR
          if (line.trim() === '---') {
            html += '<hr class="report-rule">';
            i++; continue;
