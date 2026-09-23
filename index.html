@@ -8,7 +8,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&family=Oswald:ital,wght@0,300;0,400;0,700;1,700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="css/style.css?v=5924">
+   <link rel="stylesheet" href="css/style.css?v=5924">
+   <style>
+    .feed-item { border-bottom: 1px solid #eee; padding: 12px 0; cursor: pointer; }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-item__head { display: flex; align-items: center; gap: 8px; }
+    .feed-dot-viewed { width: 8px; height: 8px; border-radius: 50%; background: #4c8468; }
+    .feed-dot-unviewed { width: 8px; height: 8px; border-radius: 50%; background: #b33a2b; }
+    .feed-date { font-weight: 600; font-size: 14px; color: #14140f; }
+    .feed-title { font-size: 14px; color: #555; flex: 1; }
+    .feed-viewed { font-size: 12px; color: #999; }
+    .feed-detail { padding: 12px 0; }
+    .feed-detail iframe { border: 1px solid #eee; border-radius: 8px; }
+   </style>
 </head>
 <body>
 
