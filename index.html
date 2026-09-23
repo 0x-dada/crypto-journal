@@ -1080,14 +1080,15 @@
        if (show) {
          localStorage.setItem('feed_viewed_' + date, '1');
          var item = feedData.find(function(d) { return d.date === date; });
-         if (item && !detail.dataset.loaded) {
-           detail.dataset.loaded = '1';
-           fetch('data/feed/' + item.filename).then(r => r.text()).then(md => {
-             detail.innerHTML = renderMarkdown(md);
-           }).catch(function() {
-             detail.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>加载失败</h3></div>';
-           });
-         }
+            if (item && !detail.dataset.loaded) {
+            detail.dataset.loaded = '1';
+            var md = item.content || '';
+            if (md) {
+              detail.innerHTML = renderMarkdown(md);
+            } else {
+              detail.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>加载失败</h3></div>';
+            }
+          }
        }
      }
      window.toggleFeedDetail = toggleFeedDetail;
