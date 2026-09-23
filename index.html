@@ -460,11 +460,7 @@
          <div class="wrap wrap--narrow">
            <div class="card card--flat">
              <div class="card__head"><div><h3 class="card__title">最新动态</h3><p class="card__sub">圈子里的新想法与互动，热闹都在这里。</p></div></div>
-             <div id="plazaBoard"></div>
-           </div>
-         </div>
-       </section>
-      <section class="section" id="panelStory" style="display:none">
+              <div id="plazaBoardFeed"></div>
         <div class="wrap wrap--narrow">
           <div class="card card--flat">
             <div class="card__head"><div><h3 class="card__title">我的故事</h3><p class="card__sub">从第一笔交易开始的成长记录，慢慢写给自己看。</p></div></div>
@@ -527,7 +523,7 @@
       document.getElementById("panelFeed").style.display = tab === "feed" ? "" : "none";
       document.getElementById("panelStory").style.display = tab === "story" ? "" : "none";
        if (tab === "books") renderBooks();
-       if (tab === "feed") { renderPlaza(); var fb = document.getElementById('plazaBoard'); var fc = document.querySelector('#panelFeed #plazaBoard'); if (fb && fc) fc.innerHTML = fb.innerHTML; }
+       if (tab === "feed") { renderPlaza(); var fb = document.getElementById('plazaBoard'); var fc = document.getElementById('plazaBoardFeed'); if (fb && fc) fc.innerHTML = fb.innerHTML; }
      }
     window.books = [
          { id: 'book1', title: '股票作手回忆录', author: '埃德温·勒费弗', cover: 'covers/book1.png', initial: '', summary: '本书是华尔街传奇操盘手杰西·利弗莫尔的传记式经典。书中记录了他从14岁入市到数次大起大落的交易生涯，深刻揭示了市场趋势、人性弱点与交易纪律的关系。对任何想在市场中长期生存的交易者而言，这都是一本必读之作。' },
