@@ -527,7 +527,7 @@
       document.getElementById("panelFeed").style.display = tab === "feed" ? "" : "none";
       document.getElementById("panelStory").style.display = tab === "story" ? "" : "none";
        if (tab === "books") renderBooks();
-       if (tab === "feed") renderPlaza();
+       if (tab === "feed") { renderPlaza(); var fb = document.getElementById('plazaBoard'); var fc = document.querySelector('#panelFeed #plazaBoard'); if (fb && fc) fc.innerHTML = fb.innerHTML; }
      }
     window.books = [
          { id: 'book1', title: '股票作手回忆录', author: '埃德温·勒费弗', cover: 'covers/book1.png', initial: '', summary: '本书是华尔街传奇操盘手杰西·利弗莫尔的传记式经典。书中记录了他从14岁入市到数次大起大落的交易生涯，深刻揭示了市场趋势、人性弱点与交易纪律的关系。对任何想在市场中长期生存的交易者而言，这都是一本必读之作。' },
