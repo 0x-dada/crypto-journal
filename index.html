@@ -985,12 +985,11 @@
        while (i < lines.length) {
          var line = lines[i];
          // H1
-         if (line.match(/^#\s/)) {
-           html += '<div class="report-card">';
-           inCard = true;
-           html += '<div class="report-card__title">' + line.replace(/^#\s/, '') + '</div>';
-           i++; continue;
-         }
+          if (line.match(/^#\s/)) {
+            html += '<div class="report-card">';
+            inCard = true;
+            i++; continue;
+          }
          // Subtitle
          if (line.match(/^\*\*报告日期/) || line.match(/^\*\*数据来源/)) {
            html += '<div class="report-card__sub">' + line.replace(/\*\*/g, '') + '</div>';
