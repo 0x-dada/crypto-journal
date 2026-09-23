@@ -454,14 +454,14 @@
         </div>
       </section>
       
-      <section class="section" id="panelFeed" style="display:none">
-        <div class="wrap wrap--narrow">
-          <div class="card card--flat">
-            <div class="card__head"><div><h3 class="card__title">社区动态</h3><p class="card__sub">圈子里的新想法与互动，热闹都在这里。</p></div></div>
-            <div class="empty" id="clubEmptyFeed"><div class="empty-icon">🫂</div><h3>还没有动态</h3><p>有动态会第一时间冒出来。</p></div>
-          </div>
-        </div>
-      </section>
+       <section class="section" id="panelFeed" style="display:none">
+         <div class="wrap wrap--narrow">
+           <div class="card card--flat">
+             <div class="card__head"><div><h3 class="card__title">每日摘要</h3><p class="card__sub">CME 比特币机构情绪日报，点开查看详情</p></div></div>
+             <div id="feedList"></div>
+           </div>
+         </div>
+       </section>
       <section class="section" id="panelStory" style="display:none">
         <div class="wrap wrap--narrow">
           <div class="card card--flat">
@@ -513,8 +513,9 @@
       document.getElementById("panelBooks").style.display = tab === "books" ? "" : "none";
       document.getElementById("panelFeed").style.display = tab === "feed" ? "" : "none";
       document.getElementById("panelStory").style.display = tab === "story" ? "" : "none";
-      if (tab === "books") renderBooks();
-    }
+       if (tab === "books") renderBooks();
+       if (tab === "feed") renderFeed();
+     }
     window.books = [
          { id: 'book1', title: '股票作手回忆录', author: '埃德温·勒费弗', cover: 'covers/book1.png', initial: '', summary: '本书是华尔街传奇操盘手杰西·利弗莫尔的传记式经典。书中记录了他从14岁入市到数次大起大落的交易生涯，深刻揭示了市场趋势、人性弱点与交易纪律的关系。对任何想在市场中长期生存的交易者而言，这都是一本必读之作。' },
          { id: 'book2', title: '纪律交易者', author: '马克·道格拉斯', cover: 'covers/book2.png', initial: '', summary: '马克·道格拉斯经典之作。书中直指交易者亏损的根源并非技术不足，而是心理与纪律的缺失。通过系统的训练方法，帮助交易者建立赢家心智，克服恐惧与贪婪，在市场中保持一致性盈利。' },
@@ -887,7 +888,41 @@
       const d = document.getElementById('tradeDate');
       if (d) d.valueAsDate = new Date();
     })();
-    CJ.init().then(() => {}).catch(console.error);
+     CJ.init().then(() => {}).catch(console.error);
+
+    /* Daily feed */
+    function renderFeed() {
+      var list = document.getElementById('feedList');
+      if (!list) return;
+      fetch('data/feed/summary.json').then(r => r.json()).then(data => {
+        if (!data || !data.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><h3>暂无日报</h3><p>每天8:30后会更新当日摘要。</p></div>'; return; }
+        list.innerHTML = data.map(item => {
+          var viewed = localStorage.getItem('feed_viewed_' + item.date) ? '已查看' : '未查看';
+          var dotClass = viewed === '已查看' ? 'feed-dot-viewed' : 'feed-dot-unviewed';
+          return '<div class="feed-item" onclick="toggleFeedDetail(\'' + item.date + '\')">' +
+            '<div class="feed-item__head">' +
+              '<span class="' + dotClass + '"></span>' +
+              '<span class="feed-date">' + item.date + ' ' + item.weekday + '</span>' +
+              '<span class="feed-title">' + item.title + '</span>' +
+              '<span class="feed-viewed">' + viewed + '</span>' +
+            '</div>' +
+            '<div class="feed-detail" id="feed-detail-' + item.date + '" style="display:none">' +
+              '<iframe src="data/feed/' + item.filename + '" style="width:100%;height:400px;border:none;"></iframe>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }).catch(e => { list.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>加载失败</h3></div>'; });
+    }
+
+    function toggleFeedDetail(date) {
+      var detail = document.getElementById('feed-detail-' + date);
+      if (!detail) return;
+      var show = detail.style.display === 'none';
+      detail.style.display = show ? '' : 'none';
+      if (show) localStorage.setItem('feed_viewed_' + date, '1');
+    }
+    window.toggleFeedDetail = toggleFeedDetail;
+    window.renderFeed = renderFeed;
   </script>
 </body>
 </html>
