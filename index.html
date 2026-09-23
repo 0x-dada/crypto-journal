@@ -526,8 +526,9 @@
       document.getElementById("panelBooks").style.display = tab === "books" ? "" : "none";
       document.getElementById("panelFeed").style.display = tab === "feed" ? "" : "none";
       document.getElementById("panelStory").style.display = tab === "story" ? "" : "none";
-      if (tab === "books") renderBooks();
-    }
+       if (tab === "books") renderBooks();
+       if (tab === "feed") renderPlaza();
+     }
     window.books = [
          { id: 'book1', title: '股票作手回忆录', author: '埃德温·勒费弗', cover: 'covers/book1.png', initial: '', summary: '本书是华尔街传奇操盘手杰西·利弗莫尔的传记式经典。书中记录了他从14岁入市到数次大起大落的交易生涯，深刻揭示了市场趋势、人性弱点与交易纪律的关系。对任何想在市场中长期生存的交易者而言，这都是一本必读之作。' },
          { id: 'book2', title: '纪律交易者', author: '马克·道格拉斯', cover: 'covers/book2.png', initial: '', summary: '马克·道格拉斯经典之作。书中直指交易者亏损的根源并非技术不足，而是心理与纪律的缺失。通过系统的训练方法，帮助交易者建立赢家心智，克服恐惧与贪婪，在市场中保持一致性盈利。' },
