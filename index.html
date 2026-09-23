@@ -8,9 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&family=Oswald:ital,wght@0,300;0,400;0,700;1,700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=5925">
+  <link rel="stylesheet" href="css/style.css?v=5924">
 </head>
 <body>
 
@@ -456,11 +454,15 @@
         </div>
       </section>
       
-       <section class="section" id="panelFeed" style="display:none">
-         <div class="wrap wrap--narrow">
-           <div class="card card--flat">
-             <div class="card__head"><div><h3 class="card__title">最新动态</h3><p class="card__sub">圈子里的新想法与互动，热闹都在这里。</p></div></div>
-              <div id="plazaBoardFeed"></div>
+      <section class="section" id="panelFeed" style="display:none">
+        <div class="wrap wrap--narrow">
+          <div class="card card--flat">
+            <div class="card__head"><div><h3 class="card__title">社区动态</h3><p class="card__sub">圈子里的新想法与互动，热闹都在这里。</p></div></div>
+            <div class="empty" id="clubEmptyFeed"><div class="empty-icon">🫂</div><h3>还没有动态</h3><p>有动态会第一时间冒出来。</p></div>
+          </div>
+        </div>
+      </section>
+      <section class="section" id="panelStory" style="display:none">
         <div class="wrap wrap--narrow">
           <div class="card card--flat">
             <div class="card__head"><div><h3 class="card__title">我的故事</h3><p class="card__sub">从第一笔交易开始的成长记录，慢慢写给自己看。</p></div></div>
@@ -489,17 +491,6 @@
   <script src="js/app.js?v=5888"></script>
   <script src="js/history.js?v=5888"></script>
   <script src="js/stats.js?v=5888"></script>
-  <div id="token-banner" style="display:none;background:#1a1a1a;color:#fff;text-align:center;padding:12px;margin:0;position:fixed;top:0;left:0;right:0;z-index:9999;font-size:14px;font-family:sans-serif;">
-    <input id="token-input" type="text" placeholder="粘贴 GitHub Token" style="width:70%;padding:8px;margin:6px 0;border-radius:6px;border:none;font-size:14px;"/>
-    <button onclick="saveToken()" style="padding:8px 16px;border-radius:6px;border:none;background:#333;color:#fff;cursor:pointer;font-size:14px;">保存</button>
-  </div>
-  <script>
-  function saveToken() {
-    var t = document.getElementById('token-input').value.trim();
-    if (t) { localStorage.setItem('gh_token', t); document.getElementById('token-banner').style.display='none'; location.reload(); }
-  }
-  if (!localStorage.getItem('gh_token')) { document.getElementById('token-banner').style.display='block'; }
-  </script>
   <script>
     /* Router */
     function switchView(v) {
@@ -522,9 +513,8 @@
       document.getElementById("panelBooks").style.display = tab === "books" ? "" : "none";
       document.getElementById("panelFeed").style.display = tab === "feed" ? "" : "none";
       document.getElementById("panelStory").style.display = tab === "story" ? "" : "none";
-       if (tab === "books") renderBooks();
-       if (tab === "feed") { (async () => { await renderPlaza(); var fb = document.getElementById('plazaBoard'); var fc = document.getElementById('plazaBoardFeed'); if (fb && fc) fc.innerHTML = fb.innerHTML; })(); }
-     }
+      if (tab === "books") renderBooks();
+    }
     window.books = [
          { id: 'book1', title: '股票作手回忆录', author: '埃德温·勒费弗', cover: 'covers/book1.png', initial: '', summary: '本书是华尔街传奇操盘手杰西·利弗莫尔的传记式经典。书中记录了他从14岁入市到数次大起大落的交易生涯，深刻揭示了市场趋势、人性弱点与交易纪律的关系。对任何想在市场中长期生存的交易者而言，这都是一本必读之作。' },
          { id: 'book2', title: '纪律交易者', author: '马克·道格拉斯', cover: 'covers/book2.png', initial: '', summary: '马克·道格拉斯经典之作。书中直指交易者亏损的根源并非技术不足，而是心理与纪律的缺失。通过系统的训练方法，帮助交易者建立赢家心智，克服恐惧与贪婪，在市场中保持一致性盈利。' },
@@ -899,15 +889,5 @@
     })();
     CJ.init().then(() => {}).catch(console.error);
   </script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js?v=3').then(reg => {
-      console.log('SW registered:', reg.scope);
-    }).catch(err => console.log('SW registration failed:', err));
-  });
-}
-</script>
 </body>
 </html>
